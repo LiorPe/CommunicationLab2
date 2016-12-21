@@ -73,8 +73,10 @@ namespace CommunicationLab2
             IPAddress ipAddress = IPAddress.Broadcast;
             IPEndPoint ipEndPoint = new IPEndPoint(ipAddress, cUDPBroadcatPort);
             Byte[] sendBytes = GetRequestMessage();
+            Console.WriteLine("Sending request messge");
             _meAsClientUdpClient.Send(sendBytes, sendBytes.Length, ipEndPoint);
             _meAsClientUdpClient.Client.ReceiveTimeout = 1000;
+
             IPEndPoint RemoteIpEndPoint = new IPEndPoint(IPAddress.Any, 0);
             Byte[] receiveBytes = null;
             try
@@ -85,6 +87,7 @@ namespace CommunicationLab2
                     {
                         if (TryParseOfferMessage(receiveBytes, out _myServerName, out _myServerIp, out _myServerPort))
                         {
+                            Console.WriteLine("Got an offer from: IP {0}, port {1}", _myServerIp.ToString(), _myServerPort);
                             _meAsClientUdpClient.Close();
                             ConnectToServer(_myServerIp, _myServerPort);
                             return true;
@@ -99,6 +102,7 @@ namespace CommunicationLab2
             {
 
             }
+            Console.WriteLine("Did not got an offer.");
             _meAsClientUdpClient.Close();
             return false;
 
