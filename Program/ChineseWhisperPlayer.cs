@@ -87,7 +87,7 @@ namespace CommunicationLab2
                     {
                         if (TryParseOfferMessage(receiveBytes, out _myServerName, out _myServerIp, out _myServerPort))
                         {
-                            Console.WriteLine("Got an offer from: IP {0}, port {1}", _myServerIp.ToString(), _myServerPort);
+                            Console.WriteLine("Got an offer from: Servar name {0}, IP {1}, port {2}", _myServerName, _myServerIp.ToString(), _myServerPort);
                             _meAsClientUdpClient.Close();
                             ConnectToServer(_myServerIp, _myServerPort);
                             return true;
