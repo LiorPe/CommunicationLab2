@@ -144,7 +144,7 @@ namespace CommunicationLab2
         private bool IncomingTCPConnection()
         {
             ///IDO: check for TCP connection from clients
-            ///IDO: incoming connection -> connect
+            ///IDO: incoming connection -> allow connection
             throw new NotImplementedException();
         }
 
@@ -194,7 +194,7 @@ namespace CommunicationLab2
                     {
                         if (TryParseOfferMessage(receiveBytes, out _myServerName, out _myServerIp, out _myServerPort))
                         {
-                            Console.WriteLine("Got an offer from: Servar name {0}, IP {1}, port {2}", _myServerName, _myServerIp.ToString(), _myServerPort);
+                            Console.WriteLine("Got an offer from: Server name {0}, IP {1}, port {2}", _myServerName, _myServerIp.ToString(), _myServerPort);
                             _meAsClientUdpClient.Close();
                             ConnectToServer(_myServerIp, _myServerPort);
                             return true;
@@ -218,7 +218,18 @@ namespace CommunicationLab2
 
         private void ConnectToServer(IPAddress _myServerIp, short _myServerPort)
         {
-            throw new NotImplementedException();
+            //IDO: no idea if this works
+            _myClientTcpClient = new TcpClient();
+            Console.WriteLine("Connecting to server...");
+            try
+            {
+                _myClientTcpClient.Connect(_myServerIp, _myServerPort);
+            }
+            catch
+            {
+                Console.WriteLine("Failed to connect.");
+            }
+
         }
 
         public bool TryParseOfferMessage(byte[] receiveBytes,out string serverName, out IPAddress myServerIp, out short myServerPort)
