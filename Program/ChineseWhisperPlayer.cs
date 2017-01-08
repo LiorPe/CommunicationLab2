@@ -138,7 +138,19 @@ namespace CommunicationLab2
         private void SendUserInput()
         {
             //IDO: get console.readline and send the given msg in a loop
-            throw new NotImplementedException();
+            while(true)
+            {
+                Console.WriteLine("Enter message:");
+                string input = Console.ReadLine();
+                if (_myClientTcpClient != null)
+                {
+                    NetworkStream stream = _myClientTcpClient.GetStream();
+                    byte[] userMessage = System.Text.Encoding.ASCII.GetBytes(input);
+                    Console.WriteLine("Sent user input");
+                    stream.Write(userMessage, 0, userMessage.Length);
+                    //stream.Close();
+                }
+            }
         }
 
         private bool IncomingTCPConnection()
