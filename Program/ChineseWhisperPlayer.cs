@@ -392,7 +392,7 @@ namespace CommunicationLab2
 
         private bool IsClientConnectedToListeningPort()
         {
-            //IDO: change this to UDP?
+            //IDO: change this to UDP<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
             _meAsServerTcpListener = new TcpListener(localAddr, _meAsServerListeningPort);
             _meAsServerTcpListener.Server.ReceiveTimeout = 1000;
             _meAsServerTcpListener.Start();
