@@ -166,7 +166,34 @@ namespace CommunicationLab2
         private void SendUserMessage(string altered_message)
         {
             //IDO: send msg
-            throw new NotImplementedException();
+            //IDO: no idea if this works
+
+            if (_myClientTcpClient != null)
+            {
+                NetworkStream stream = _myClientTcpClient.GetStream();
+                /*Byte[] bytes = new Byte[256];
+                while ((i = stream.Read(bytes, 0, bytes.Length)) != 0)
+                {
+                    //IDO: print message to terminal?
+                    Console.WriteLine("Got a request message");
+                    // Translate data bytes to a ASCII string.
+                    requestMessage = System.Text.Encoding.ASCII.GetString(bytes, 0, i);
+
+                    byte[] offerMessage = GetOfferMessage();
+
+                    // Send back a response.
+                    //IDO: print message to terminal?
+                    Console.WriteLine("Sent offer message");
+                    stream.Write(offerMessage, 0, offerMessage.Length);
+                }*/
+                byte[] userMessage = System.Text.Encoding.ASCII.GetBytes(altered_message);
+
+                // Send back a response.
+                //IDO: print message to terminal?
+                Console.WriteLine("Sent user message");
+                stream.Write(userMessage, 0, userMessage.Length);
+                //stream.Close();
+            }
         }
 
         private string AlterMessage(string message)
@@ -394,6 +421,7 @@ namespace CommunicationLab2
                     Console.WriteLine("Sent offer message");
                     stream.Write(offerMessage, 0, offerMessage.Length);
                 }
+                //stream.Close();
             }
             return _myClientTcpClient != null && _myClientTcpClient.Client != null && _myClientTcpClient.Client.Connected; 
 
