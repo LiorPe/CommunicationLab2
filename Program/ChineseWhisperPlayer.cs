@@ -257,7 +257,8 @@ namespace CommunicationLab2
         private void PrintUserMessage()
         {
             //IDO: listen for msg -> print msg
-            throw new NotImplementedException();
+            string message = GetUserMessage();
+            Console.WriteLine("Message received: " + message);
         }
 
 
