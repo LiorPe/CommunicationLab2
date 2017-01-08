@@ -137,6 +137,7 @@ namespace CommunicationLab2
 
         private void SendUserInput()
         {
+            //IDO: get console.readline and send the given msg in a loop
             throw new NotImplementedException();
         }
 
@@ -149,21 +150,25 @@ namespace CommunicationLab2
 
         private void SendUserMessage(byte[] altered_message)
         {
+            //IDO: send msg
             throw new NotImplementedException();
         }
 
         private byte[] AlterMessage(byte[] message)
         {
+            //IDO: randomluy change one char in msg and return
             throw new NotImplementedException();
         }
 
         private byte[] GetUserMessage()
         {
+            //IDO: listen for msg -> return msg
             throw new NotImplementedException();
         }
 
         private void PrintUserMessage()
         {
+            //IDO: listen for msg -> print msg
             throw new NotImplementedException();
         }
 
