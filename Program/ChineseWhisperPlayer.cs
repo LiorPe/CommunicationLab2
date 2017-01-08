@@ -145,7 +145,21 @@ namespace CommunicationLab2
         {
             ///IDO: check for TCP connection from clients
             ///IDO: incoming connection -> allow connection
-            throw new NotImplementedException();
+            //IDO: no idea if this works
+            _meAsServerTcpListener = new TcpListener(localAddr, _meAsServerListeningPort);
+            _meAsServerTcpListener.Server.ReceiveTimeout = 1000;
+            _meAsServerTcpListener.Start();
+            Thread.Sleep(1000);
+            Console.WriteLine("Checking if any clients asked to connect.");
+            if (!_meAsServerTcpListener.Pending())
+            {
+                _meAsServerTcpListener.Stop();
+                Console.WriteLine("No clients asked to connect.");
+                return false;
+            }
+            Socket s = _meAsServerTcpListener.AcceptSocket();
+            Console.WriteLine("Connection accepted from " + s.RemoteEndPoint);
+            return true;
         }
 
         private void SendUserMessage(byte[] altered_message)
