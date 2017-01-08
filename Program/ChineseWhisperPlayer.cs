@@ -130,8 +130,8 @@ namespace CommunicationLab2
         public void RunRXonTXon()
         {
             //IDO: msg rcvd from client -> replace one char -> send new msg to server
-            Byte[] message = GetUserMessage();
-            Byte[] altered_message = AlterMessage(message);
+            string message = GetUserMessage();
+            string altered_message = AlterMessage(message);
             SendUserMessage(altered_message);
         }
 
@@ -157,27 +157,62 @@ namespace CommunicationLab2
                 Console.WriteLine("No clients asked to connect.");
                 return false;
             }
-            Socket s = _meAsServerTcpListener.AcceptSocket();
-            Console.WriteLine("Connection accepted from " + s.RemoteEndPoint);
+            _myClientTcpClient = _meAsServerTcpListener.AcceptTcpClient();
+            /*Socket s = _meAsServerTcpListener.AcceptSocket();
+            Console.WriteLine("Connection accepted from " + s.RemoteEndPoint);*/
             return true;
         }
 
-        private void SendUserMessage(byte[] altered_message)
+        private void SendUserMessage(string altered_message)
         {
             //IDO: send msg
             throw new NotImplementedException();
         }
 
-        private byte[] AlterMessage(byte[] message)
+        private string AlterMessage(string message)
         {
             //IDO: randomluy change one char in msg and return
-            throw new NotImplementedException();
+            StringBuilder sb = new StringBuilder(message);
+            Random r = new Random();
+            int index = r.Next(0, message.Length-1);
+            sb[index] = GetLetter();
+            return sb.ToString();
         }
 
-        private byte[] GetUserMessage()
+        public static char GetLetter()
+        {
+            string chars = "$%#@!*abcdefghijklmnopqrstuvwxyz1234567890?;:ABCDEFGHIJKLMNOPQRSTUVWXYZ^&";
+            Random rand = new Random();
+            int num = rand.Next(0, chars.Length - 1);
+            return chars[num];
+
+        }
+
+        private string GetUserMessage()
         {
             //IDO: listen for msg -> return msg
-            throw new NotImplementedException();
+            //IDO: no idea if this works
+
+            string message = "";
+            if (_myClientTcpClient != null)
+            {
+                Byte[] bytes = new Byte[256];
+
+                // Get a stream object for reading and writing
+                NetworkStream stream = _myClientTcpClient.GetStream();
+
+                int i;
+
+                // Loop to receive all the data sent by the client.
+                while ((i = stream.Read(bytes, 0, bytes.Length)) != 0)
+                {
+                    //IDO: print message to terminal?
+                    Console.WriteLine("Got a user message");
+                    // Translate data bytes to a ASCII string.
+                    message = System.Text.Encoding.ASCII.GetString(bytes, 0, i);
+                }
+            }
+            return message;
         }
 
         private void PrintUserMessage()
