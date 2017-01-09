@@ -30,7 +30,7 @@ namespace CommunicationLab2
         UdpClient _meAsServerUdpClient;
 
         short _meAsServerListeningPort;
-        private char[] _requetMessage;
+        private char[] _requestMessage;
         string _serverIp;
 
         IPAddress _localIp = GetLocalIPAddress();
@@ -66,7 +66,6 @@ namespace CommunicationLab2
                 {
                     RunRXonTXon();
                 }
-                System.Threading.Thread.Sleep(1000);
             }
         }
 
@@ -158,9 +157,12 @@ namespace CommunicationLab2
             ///IDO: check for TCP connection from clients
             ///IDO: incoming connection -> allow connection
             //IDO: no idea if this works
-            _meAsServerTcpListener = new TcpListener(localAddr, _meAsServerListeningPort);
-            _meAsServerTcpListener.Server.ReceiveTimeout = 1000;
-            _meAsServerTcpListener.Start();
+            if(_meAsServerTcpListener == null)
+            {
+                _meAsServerTcpListener = new TcpListener(localAddr, _meAsServerListeningPort);
+                _meAsServerTcpListener.Server.ReceiveTimeout = 1000;
+                _meAsServerTcpListener.Start();
+            }
             Thread.Sleep(1000);
             Console.WriteLine("Checking if any clients asked to connect.");
             if (!_meAsServerTcpListener.Pending())
@@ -264,7 +266,10 @@ namespace CommunicationLab2
 
         private bool FindServerPort()
         {
-            _meAsClientUdpClient = new UdpClient(new IPEndPoint(IPAddress.Any, cUDPBroadcatPort));
+            if(_meAsClientUdpClient == null)
+            {
+                _meAsClientUdpClient = new UdpClient(new IPEndPoint(IPAddress.Any, cUDPBroadcatPort));
+            }
             IPAddress ipAddress = IPAddress.Broadcast;
             IPEndPoint ipEndPoint = new IPEndPoint(ipAddress, cUDPBroadcatPort);
             Byte[] sendBytes = GetRequestMessage();
@@ -392,61 +397,44 @@ namespace CommunicationLab2
 
         private bool IsClientConnectedToListeningPort()
         {
-            //IDO: change this to UDP<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-            _meAsServerTcpListener = new TcpListener(localAddr, _meAsServerListeningPort);
-            _meAsServerTcpListener.Server.ReceiveTimeout = 1000;
-            _meAsServerTcpListener.Start();
-            Thread.Sleep(1000);
+            if(_meAsServerUdpClient == null)
+            {
+                _meAsServerUdpClient = new UdpClient(cUDPBroadcatPort);
+                _meAsServerUdpClient.Connect(_localIp, cUDPBroadcatPort);
+                _meAsServerUdpClient.Client.ReceiveTimeout = 1000;
+            }
+            IPEndPoint remoteIpEndPoint = new IPEndPoint(IPAddress.Broadcast, cUDPBroadcatPort);
             Console.WriteLine("Checking if any clients asked to connect.");
-            if (!_meAsServerTcpListener.Pending())
+            try
             {
-                _meAsServerTcpListener.Stop();
-                Console.WriteLine("No clients asked to connect.");
-
-                return false;
-
-            }
-
-            _myClientTcpClient = _meAsServerTcpListener.AcceptTcpClient();
-            if (_myClientTcpClient != null)
-            {
-
-                string requestMessage = null;
-
-                // Get a stream object for reading and writing
-                NetworkStream stream = _myClientTcpClient.GetStream();
-                Byte[] bytes = new Byte[256];
-
-                int i;
-
-                // Loop to receive all the data sent by the client.
-                while ((i = stream.Read(bytes, 0, bytes.Length)) != 0)
+                Byte[] req = new Byte[20];
+                req = _meAsServerUdpClient.Receive(ref remoteIpEndPoint);
+                string hostName = Encoding.ASCII.GetString(req, 0, 16);
+                //string randomNum = Encoding.ASCII.GetString(req, 16, 4);
+                if (hostName.Contains("Networking17") && hostName != _programName)
                 {
-                    //IDO: print message to terminal?
                     Console.WriteLine("Got a request message");
-                    // Translate data bytes to a ASCII string.
-                    requestMessage = System.Text.Encoding.ASCII.GetString(bytes, 0, i);
-
-                    byte[] offerMessage = GetOfferMessage();
-
-                    // Send back a response.
-                    //IDO: print message to terminal?
+                    Byte[] offer = GetOfferMessage(req);
+                    //Byte[] offer = Encoding.ASCII.GetBytes(_programName + randomNum + _localIp + _myServerPort);
+                    _meAsServerUdpClient.Send(offer, 32);
                     Console.WriteLine("Sent offer message");
-                    stream.Write(offerMessage, 0, offerMessage.Length);
+                    return true;
                 }
-                //stream.Close();
             }
-            return _myClientTcpClient != null && _myClientTcpClient.Client != null && _myClientTcpClient.Client.Connected; 
-
-
+            catch
+            {
+                Console.WriteLine("No clients asked to connect.");
+                return false;
+            }
+            return false;
 
         }
 
-        public byte[] GetOfferMessage()
+        public byte[] GetOfferMessage(Byte[] request)
         {
-            //IDO: offer = request + ip + port
+            string reqNum = Encoding.ASCII.GetString(request, 16, 4);
             byte[] programNameInBytes = System.Text.Encoding.ASCII.GetBytes(_programName);
-            byte[] numberInBytes = BitConverter.GetBytes(_randomNumber);
+            byte[] numberInBytes = System.Text.Encoding.ASCII.GetBytes(reqNum);
             byte[] localIPInBytes = _localIp.GetAddressBytes();
             byte[] listeningPortInBytes = BitConverter.GetBytes(_meAsServerListeningPort);
 
