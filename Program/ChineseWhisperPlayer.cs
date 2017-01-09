@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -145,8 +146,10 @@ namespace CommunicationLab2
                 {
                     NetworkStream stream = _myClientTcpClient.GetStream();
                     byte[] userMessage = System.Text.Encoding.ASCII.GetBytes(input);
-                    Console.WriteLine("Sent user input");
+                    //StreamWriter sw = new StreamWriter(stream);
+                    //sw.WriteLine(userMessage);
                     stream.Write(userMessage, 0, userMessage.Length);
+                    Console.WriteLine("Sent user input");
                     //stream.Close();
                 }
             }
@@ -161,10 +164,10 @@ namespace CommunicationLab2
             {
                 _meAsServerTcpListener = new TcpListener(localAddr, _meAsServerListeningPort);
                 _meAsServerTcpListener.Server.ReceiveTimeout = 1000;
-                _meAsServerTcpListener.Start();
             }
             Thread.Sleep(1000);
             Console.WriteLine("Checking if any clients asked to connect.");
+            _meAsServerTcpListener.Start();
             if (!_meAsServerTcpListener.Pending())
             {
                 _meAsServerTcpListener.Stop();
@@ -264,21 +267,21 @@ namespace CommunicationLab2
         }
 
 
-        private bool FindServerPort()
+        private bool FindServerPort() //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<continue comparison here
         {
-            if(_meAsClientUdpClient == null)
+            if (_meAsClientUdpClient == null)
             {
-                _meAsClientUdpClient = new UdpClient(new IPEndPoint(IPAddress.Any, cUDPBroadcatPort));
+                _meAsClientUdpClient = new UdpClient();
+                _meAsClientUdpClient.Connect(_localIp, cUDPBroadcatPort);
             }
             IPAddress ipAddress = IPAddress.Broadcast;
-            IPEndPoint ipEndPoint = new IPEndPoint(ipAddress, cUDPBroadcatPort);
             Byte[] sendBytes = GetRequestMessage();
             //IDO:write the message to terminal as well?
             Console.WriteLine("Sending request messge");
-            _meAsClientUdpClient.Send(sendBytes, sendBytes.Length, ipEndPoint);
+            _meAsClientUdpClient.Send(sendBytes, sendBytes.Length);
             _meAsClientUdpClient.Client.ReceiveTimeout = 1000;
+            IPEndPoint RemoteIpEndPoint = new IPEndPoint(IPAddress.Broadcast, cUDPBroadcatPort);
 
-            IPEndPoint RemoteIpEndPoint = new IPEndPoint(IPAddress.Any, 0);
             Byte[] receiveBytes = null;
             try
             {
@@ -286,12 +289,16 @@ namespace CommunicationLab2
                 {
                     if (receiveBytes != null)
                     {
-                        if (TryParseOfferMessage(receiveBytes, out _myServerName, out _myServerIp, out _myServerPort))
+                        int _myServerID;
+                        if (TryParseOfferMessage(receiveBytes, out _myServerName, out _myServerID, out _myServerIp, out _myServerPort))
                         {
-                            Console.WriteLine("Got an offer from: Server name {0}, IP {1}, port {2}", _myServerName, _myServerIp.ToString(), _myServerPort);
-                            _meAsClientUdpClient.Close();
-                            ConnectToServer(_myServerIp, _myServerPort);
-                            return true;
+                            if(_myServerName != _programName && _myServerID == _randomNumber && _myServerName.Contains("Networking17"))
+                            {
+                                Console.WriteLine("Got an offer from: Server name {0}, IP {1}, port {2}", _myServerName, _myServerIp.ToString(), _myServerPort);
+                                _meAsClientUdpClient.Close();
+                                ConnectToServer(_myServerIp, _myServerPort);
+                                return true;
+                            }
                         }
 
                     }
@@ -313,20 +320,23 @@ namespace CommunicationLab2
         private void ConnectToServer(IPAddress _myServerIp, short _myServerPort)
         {
             //IDO: no idea if this works
-            _myClientTcpClient = new TcpClient();
-            Console.WriteLine("Connecting to server...");
-            try
+            if(_myClientTcpClient == null)
             {
-                _myClientTcpClient.Connect(_myServerIp, _myServerPort);
-            }
-            catch
-            {
-                Console.WriteLine("Failed to connect.");
+                _myClientTcpClient = new TcpClient();
+                Console.WriteLine("Connecting to server...");
+                try
+                {
+                    _myClientTcpClient.Connect(_myServerIp, _myServerPort);
+                }
+                catch
+                {
+                    Console.WriteLine("Failed to connect.");
+                }
             }
 
         }
 
-        public bool TryParseOfferMessage(byte[] receiveBytes,out string serverName, out IPAddress myServerIp, out short myServerPort)
+        public bool TryParseOfferMessage(byte[] receiveBytes,out string serverName, out int idNum, out IPAddress myServerIp, out short myServerPort)
         {
             try
             {
@@ -339,7 +349,12 @@ namespace CommunicationLab2
                         serverNameInBytes[i] = receiveBytes[lastByteRead];
                         lastByteRead++;
                     }
-                    lastByteRead += 4;
+                    byte[] idNumInBytes = new byte[4];
+                    for (int i = 0; i < idNumInBytes.Length; i++)
+                    {
+                        idNumInBytes[i] = receiveBytes[lastByteRead];
+                        lastByteRead++;
+                    }
                     byte[] serverIpInBytes = new byte[4];
                     for (int i = 0; i < serverIpInBytes.Length; i++)
                     {
@@ -354,7 +369,8 @@ namespace CommunicationLab2
                     }
 
                     serverName = System.Text.Encoding.Default.GetString(serverNameInBytes);
-                     myServerIp = new IPAddress(serverIpInBytes);
+                    idNum = BitConverter.ToInt32(idNumInBytes, 0);
+                    myServerIp = new IPAddress(serverIpInBytes);
                     myServerPort = BitConverter.ToInt16(serverPortInBytes, 0);
 
                     return true;
@@ -364,11 +380,13 @@ namespace CommunicationLab2
             catch
             {
                 serverName = String.Empty;
+                idNum = -1;
                 myServerIp = null;
                 myServerPort = -1;
                 return false;
             }
             serverName = String.Empty;
+            idNum = -1;
             myServerIp = null;
             myServerPort = -1;
             return false;
