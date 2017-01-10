@@ -131,8 +131,11 @@ namespace CommunicationLab2
         {
             //IDO: msg rcvd from client -> replace one char -> send new msg to server
             string message = GetUserMessage();
-            string altered_message = AlterMessage(message);
-            SendUserMessage(altered_message);
+            if(message != "")
+            {
+                string altered_message = AlterMessage(message);
+                SendUserMessage(altered_message);
+            }
         }
 
         private void SendUserInput()
@@ -263,7 +266,8 @@ namespace CommunicationLab2
         {
             //IDO: listen for msg -> print msg
             string message = GetUserMessage();
-            Console.WriteLine("Message received: " + message);
+            if(message != "")
+                Console.WriteLine("Message received: " + message);
         }
 
 
