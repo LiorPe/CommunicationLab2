@@ -151,10 +151,7 @@ namespace CommunicationLab2
             }
             catch
             {
-                serverName = String.Empty;
-                myServerIp = null;
-                myServerPort = -1;
-                return false;
+
             }
             serverName = String.Empty;
             myServerIp = null;
@@ -190,7 +187,26 @@ namespace CommunicationLab2
             _meAsServerTcpListener.Server.ReceiveTimeout = 1000;
             _meAsServerTcpListener.Start();
             Thread.Sleep(1000);
+            byte[] message = new byte[20];
             Console.WriteLine("Checking if any client asked to connect.");
+
+            if (_meAsServerTcpListener.Server.Connected)
+            {
+                _meAsServerTcpListener.Server.Receive(message);
+                Console.WriteLine("Got a request message");
+                string myClientName;
+                if (TryParseRequestMessage(message, out myClientName))
+                {
+
+                    byte[] offerMessage = GetOfferMessage();
+
+                    // Send back a response.
+                    Console.WriteLine("Sent offer message");
+                    _meAsServerTcpListener.Server.Send(offerMessage);
+                }
+
+
+            }
             if (!_meAsServerTcpListener.Pending())
             {
                 _meAsServerTcpListener.Stop();
@@ -200,37 +216,63 @@ namespace CommunicationLab2
 
             }
 
-            _myClientTcpClient = _meAsServerTcpListener.AcceptTcpClient();
-            if (_myClientTcpClient != null)
-            {
+            //_myClientTcpClient = _meAsServerTcpListener.AcceptTcpClient();
+            //if (_myClientTcpClient != null)
+            //{
 
-                string requestMessage = null;
+            //    string requestMessage = null;
 
-                // Get a stream object for reading and writing
-                NetworkStream stream = _myClientTcpClient.GetStream();
-                Byte[] bytes = new Byte[256];
+            //    // Get a stream object for reading and writing
+            //    NetworkStream stream = _myClientTcpClient.GetStream();
+            //    Byte[] bytes = new Byte[256];
 
-                int i;
+            //    int i;
 
-                // Loop to receive all the data sent by the client.
-                while ((i = stream.Read(bytes, 0, bytes.Length)) != 0)
-                {
+            //    // Loop to receive all the data sent by the client.
+            //    while ((i = stream.Read(bytes, 0, bytes.Length)) != 0)
+            //    {
 
-                    Console.WriteLine("Got a request message");
-                    // Translate data bytes to a ASCII string.
-                    requestMessage = System.Text.Encoding.ASCII.GetString(bytes, 0, i);
+            //        Console.WriteLine("Got a request message");
+            //        // Translate data bytes to a ASCII string.
+            //        requestMessage = System.Text.Encoding.ASCII.GetString(bytes, 0, i);
 
-                    byte[] offerMessage = GetOfferMessage();
+            //        byte[] offerMessage = GetOfferMessage();
 
-                    // Send back a response.
-                    Console.WriteLine("Sent offer message");
-                    stream.Write(offerMessage, 0, offerMessage.Length);
-                }
-            }
+            //        // Send back a response.
+            //        Console.WriteLine("Sent offer message");
+            //        stream.Write(offerMessage, 0, offerMessage.Length);
+            //    }
+            //}
             return _myClientTcpClient != null && _myClientTcpClient.Client != null && _myClientTcpClient.Client.Connected; 
 
 
 
+        }
+
+        private bool TryParseRequestMessage(byte[] message, out string myClientName)
+        {
+            try
+            {
+                if (message.Length == 20)
+                {
+                    byte[] clientNameInBytes = new byte[16];
+                    int lastByteRead = 0;
+                    for (int i = 0; i < clientNameInBytes.Length; i++)
+                    {
+                        clientNameInBytes[i] = message[lastByteRead];
+                        lastByteRead++;
+                    }
+                    myClientName = System.Text.Encoding.Default.GetString(clientNameInBytes);
+                    return true;
+                }
+
+            }
+            catch
+            {
+
+            }
+            myClientName = String.Empty;
+            return false;
         }
 
         public byte[] GetOfferMessage()
