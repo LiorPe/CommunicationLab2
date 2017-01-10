@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -27,8 +28,10 @@ namespace CommunicationLab2
 
         UdpClient _meAsClientUdpClient;
 
+        UdpClient _meAsServerUdpClient;
+
         short _meAsServerListeningPort;
-        private char[] _requetMessage;
+        private char[] _requestMessage;
         string _serverIp;
 
         IPAddress _localIp = GetLocalIPAddress();
@@ -38,46 +41,247 @@ namespace CommunicationLab2
         IPAddress _myServerIp;
         short _myServerPort;
 
+        Thread InputThread;
+        Boolean IsThread = false;
+
 
         public void Run()
         {
-                        
-
-            RunRXoffTXoff();
-        }
-
-        #region rx-off-tx-off
-        public void RunRXoffTXoff()
-        {
+            GenerateRandom();
             _meAsServerListeningPort = FindFirstAvailableListeningPort();
             while (true)
             {
-                if (IsClienntConnectedToListeningPort())
+                if(rx == Mode.Off && tx == Mode.Off)
                 {
-                    rx = Mode.On;
-                    RunRXonTXoff();
+                    RunRXoffTXoff();
                 }
-                if (FindServerPort())
+                else if (rx == Mode.Off && tx == Mode.On)
                 {
-                    tx = Mode.On;
                     RunRXoffTXon();
                 }
+                else if (rx == Mode.On && tx == Mode.Off)
+                {
+                    RunRXonTXoff();
+                }
+                else if (rx == Mode.On && tx == Mode.On)
+                {
+                    RunRXonTXon();
+                }
+            }
+        }
+
+        private void GenerateRandom()
+        {
+            //IDO:_randomNumber determined once per run
+            Random r = new Random();
+            _randomNumber = r.Next(Int32.MinValue, Int32.MaxValue);
+        }
+
+
+        public void RunRXoffTXoff()
+        {
+            //IDO: send req msg
+            //IDO: req msg rcvd -> send offer msg
+            //IDO: no offers rcvd -> send req msg
+            //IDO: incoming TCP connection attempt -> connect to client -> RXonTXoff
+            //IDO: rcvd offer msg -> connect to server -> RXoffTXon
+            
+            if (IsClientConnectedToListeningPort())
+                if (IncomingTCPConnection())
+                    rx = Mode.On;
+            else if (FindServerPort())
+                tx = Mode.On;
+        }
+
+        public void RunRXoffTXon()
+        {
+            //IDO: req msg rcvd -> send offer msg
+            //IDO: input rcvd from user -> send msg to server
+            //IDO: incoming TCP connection attempt -> connect to client -> RXonTXon
+
+            if (IsClientConnectedToListeningPort())
+            {
+                if (IncomingTCPConnection())
+                {
+                    rx = Mode.On;
+                    InputThread.Abort();
+                    InputThread.Join();
+                    InputThread = null;
+                    IsThread = false;
+                }
+            }
+            else if (!IsThread)
+            {
+                InputThread = new Thread(SendUserInput);
+                InputThread.Start();
+                IsThread = true;
             }
 
 
         }
 
-        private bool FindServerPort()
+        public void RunRXonTXoff()
         {
-            _meAsClientUdpClient = new UdpClient(new IPEndPoint(IPAddress.Any, cUDPBroadcatPort));
-            IPAddress ipAddress = IPAddress.Broadcast;
-            IPEndPoint ipEndPoint = new IPEndPoint(ipAddress, cUDPBroadcatPort);
-            Byte[] sendBytes = GetRequestMessage();
-            Console.WriteLine("Sending request messge");
-            _meAsClientUdpClient.Send(sendBytes, sendBytes.Length, ipEndPoint);
-            _meAsClientUdpClient.Client.ReceiveTimeout = 1000;
+            //IDO: stop sending req msg/looking for servers
+            //IDO: msg rcvd from client -> print msg to terminal
+            PrintUserMessage();
+        }
 
-            IPEndPoint RemoteIpEndPoint = new IPEndPoint(IPAddress.Any, 0);
+        public void RunRXonTXon()
+        {
+            //IDO: msg rcvd from client -> replace one char -> send new msg to server
+            string message = GetUserMessage();
+            string altered_message = AlterMessage(message);
+            SendUserMessage(altered_message);
+        }
+
+        private void SendUserInput()
+        {
+            //IDO: get console.readline and send the given msg in a loop
+            while(true)
+            {
+                Console.WriteLine("Enter message:");
+                string input = Console.ReadLine();
+                if (_myClientTcpClient != null)
+                {
+                    NetworkStream stream = _myClientTcpClient.GetStream();
+                    byte[] userMessage = System.Text.Encoding.ASCII.GetBytes(input);
+                    //StreamWriter sw = new StreamWriter(stream);
+                    //sw.WriteLine(userMessage);
+                    stream.Write(userMessage, 0, userMessage.Length);
+                    Console.WriteLine("Sent user input");
+                    //stream.Close();
+                }
+            }
+        }
+
+        private bool IncomingTCPConnection()
+        {
+            ///IDO: check for TCP connection from clients
+            ///IDO: incoming connection -> allow connection
+            //IDO: no idea if this works
+            if(_meAsServerTcpListener == null)
+            {
+                _meAsServerTcpListener = new TcpListener(localAddr, _meAsServerListeningPort);
+                _meAsServerTcpListener.Server.ReceiveTimeout = 1000;
+            }
+            Thread.Sleep(1000);
+            Console.WriteLine("Checking if any clients asked to connect.");
+            _meAsServerTcpListener.Start();
+            if (!_meAsServerTcpListener.Pending())
+            {
+                _meAsServerTcpListener.Stop();
+                Console.WriteLine("No clients asked to connect.");
+                return false;
+            }
+            _myClientTcpClient = _meAsServerTcpListener.AcceptTcpClient();
+            /*Socket s = _meAsServerTcpListener.AcceptSocket();
+            Console.WriteLine("Connection accepted from " + s.RemoteEndPoint);*/
+            return true;
+        }
+
+        private void SendUserMessage(string altered_message)
+        {
+            //IDO: send msg
+            //IDO: no idea if this works
+
+            if (_myClientTcpClient != null)
+            {
+                NetworkStream stream = _myClientTcpClient.GetStream();
+                /*Byte[] bytes = new Byte[256];
+                while ((i = stream.Read(bytes, 0, bytes.Length)) != 0)
+                {
+                    //IDO: print message to terminal?
+                    Console.WriteLine("Got a request message");
+                    // Translate data bytes to a ASCII string.
+                    requestMessage = System.Text.Encoding.ASCII.GetString(bytes, 0, i);
+
+                    byte[] offerMessage = GetOfferMessage();
+
+                    // Send back a response.
+                    //IDO: print message to terminal?
+                    Console.WriteLine("Sent offer message");
+                    stream.Write(offerMessage, 0, offerMessage.Length);
+                }*/
+                byte[] userMessage = System.Text.Encoding.ASCII.GetBytes(altered_message);
+
+                // Send back a response.
+                //IDO: print message to terminal?
+                Console.WriteLine("Sent user message");
+                stream.Write(userMessage, 0, userMessage.Length);
+                //stream.Close();
+            }
+        }
+
+        private string AlterMessage(string message)
+        {
+            //IDO: randomluy change one char in msg and return
+            StringBuilder sb = new StringBuilder(message);
+            Random r = new Random();
+            int index = r.Next(0, message.Length-1);
+            sb[index] = GetLetter();
+            return sb.ToString();
+        }
+
+        public static char GetLetter()
+        {
+            string chars = "$%#@!*abcdefghijklmnopqrstuvwxyz1234567890?;:ABCDEFGHIJKLMNOPQRSTUVWXYZ^&";
+            Random rand = new Random();
+            int num = rand.Next(0, chars.Length - 1);
+            return chars[num];
+
+        }
+
+        private string GetUserMessage()
+        {
+            //IDO: listen for msg -> return msg
+            //IDO: no idea if this works
+
+            string message = "";
+            if (_myClientTcpClient != null)
+            {
+                Byte[] bytes = new Byte[256];
+
+                // Get a stream object for reading and writing
+                NetworkStream stream = _myClientTcpClient.GetStream();
+
+                int i;
+
+                // Loop to receive all the data sent by the client.
+                while ((i = stream.Read(bytes, 0, bytes.Length)) != 0)
+                {
+                    //IDO: print message to terminal?
+                    Console.WriteLine("Got a user message");
+                    // Translate data bytes to a ASCII string.
+                    message = System.Text.Encoding.ASCII.GetString(bytes, 0, i);
+                }
+            }
+            return message;
+        }
+
+        private void PrintUserMessage()
+        {
+            //IDO: listen for msg -> print msg
+            string message = GetUserMessage();
+            Console.WriteLine("Message received: " + message);
+        }
+
+
+        private bool FindServerPort() //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<continue comparison here
+        {
+            if (_meAsClientUdpClient == null)
+            {
+                _meAsClientUdpClient = new UdpClient();
+                _meAsClientUdpClient.Connect(_localIp, cUDPBroadcatPort);
+            }
+            IPAddress ipAddress = IPAddress.Broadcast;
+            Byte[] sendBytes = GetRequestMessage();
+            //IDO:write the message to terminal as well?
+            Console.WriteLine("Sending request messge");
+            _meAsClientUdpClient.Send(sendBytes, sendBytes.Length);
+            _meAsClientUdpClient.Client.ReceiveTimeout = 1000;
+            IPEndPoint RemoteIpEndPoint = new IPEndPoint(IPAddress.Broadcast, cUDPBroadcatPort);
+
             Byte[] receiveBytes = null;
             try
             {
@@ -85,12 +289,16 @@ namespace CommunicationLab2
                 {
                     if (receiveBytes != null)
                     {
-                        if (TryParseOfferMessage(receiveBytes, out _myServerName, out _myServerIp, out _myServerPort))
+                        int _myServerID;
+                        if (TryParseOfferMessage(receiveBytes, out _myServerName, out _myServerID, out _myServerIp, out _myServerPort))
                         {
-                            Console.WriteLine("Got an offer from: Servar name {0}, IP {1}, port {2}", _myServerName, _myServerIp.ToString(), _myServerPort);
-                            _meAsClientUdpClient.Close();
-                            ConnectToServer(_myServerIp, _myServerPort);
-                            return true;
+                            if(_myServerName != _programName && _myServerID == _randomNumber && _myServerName.Contains("Networking17"))
+                            {
+                                Console.WriteLine("Got an offer from: Server name {0}, IP {1}, port {2}", _myServerName, _myServerIp.ToString(), _myServerPort);
+                                _meAsClientUdpClient.Close();
+                                ConnectToServer(_myServerIp, _myServerPort);
+                                return true;
+                            }
                         }
 
                     }
@@ -102,7 +310,7 @@ namespace CommunicationLab2
             {
 
             }
-            Console.WriteLine("Did not got an offer.");
+            Console.WriteLine("Did not get an offer.");
             _meAsClientUdpClient.Close();
             return false;
 
@@ -111,10 +319,24 @@ namespace CommunicationLab2
 
         private void ConnectToServer(IPAddress _myServerIp, short _myServerPort)
         {
-            throw new NotImplementedException();
+            //IDO: no idea if this works
+            if(_myClientTcpClient == null)
+            {
+                _myClientTcpClient = new TcpClient();
+                Console.WriteLine("Connecting to server...");
+                try
+                {
+                    _myClientTcpClient.Connect(_myServerIp, _myServerPort);
+                }
+                catch
+                {
+                    Console.WriteLine("Failed to connect.");
+                }
+            }
+
         }
 
-        public bool TryParseOfferMessage(byte[] receiveBytes,out string serverName, out IPAddress myServerIp, out short myServerPort)
+        public bool TryParseOfferMessage(byte[] receiveBytes,out string serverName, out int idNum, out IPAddress myServerIp, out short myServerPort)
         {
             try
             {
@@ -127,7 +349,12 @@ namespace CommunicationLab2
                         serverNameInBytes[i] = receiveBytes[lastByteRead];
                         lastByteRead++;
                     }
-                    lastByteRead += 4;
+                    byte[] idNumInBytes = new byte[4];
+                    for (int i = 0; i < idNumInBytes.Length; i++)
+                    {
+                        idNumInBytes[i] = receiveBytes[lastByteRead];
+                        lastByteRead++;
+                    }
                     byte[] serverIpInBytes = new byte[4];
                     for (int i = 0; i < serverIpInBytes.Length; i++)
                     {
@@ -142,7 +369,8 @@ namespace CommunicationLab2
                     }
 
                     serverName = System.Text.Encoding.Default.GetString(serverNameInBytes);
-                     myServerIp = new IPAddress(serverIpInBytes);
+                    idNum = BitConverter.ToInt32(idNumInBytes, 0);
+                    myServerIp = new IPAddress(serverIpInBytes);
                     myServerPort = BitConverter.ToInt16(serverPortInBytes, 0);
 
                     return true;
@@ -151,9 +379,14 @@ namespace CommunicationLab2
             }
             catch
             {
-
+                serverName = String.Empty;
+                idNum = -1;
+                myServerIp = null;
+                myServerPort = -1;
+                return false;
             }
             serverName = String.Empty;
+            idNum = -1;
             myServerIp = null;
             myServerPort = -1;
             return false;
@@ -162,8 +395,7 @@ namespace CommunicationLab2
         private byte[] GetRequestMessage()
         {
             byte[] programNameInBytes  = System.Text.Encoding.ASCII.GetBytes(_programName);
-            Random r = new Random();
-            _randomNumber = r.Next(Int32.MinValue,Int32.MaxValue);
+            
             byte[] numberInBytes = BitConverter.GetBytes(_randomNumber);
 
             byte[] requestMessage = new byte[programNameInBytes.Length+ numberInBytes.Length];
@@ -181,135 +413,77 @@ namespace CommunicationLab2
 
 
 
-        private bool IsClienntConnectedToListeningPort()
+        private bool IsClientConnectedToListeningPort()
         {
-            _meAsServerTcpListener = new TcpListener(localAddr, _meAsServerListeningPort);
-            _meAsServerTcpListener.Server.ReceiveTimeout = 1000;
-            _meAsServerTcpListener.Start();
-            Thread.Sleep(1000);
-            byte[] message = new byte[20];
-            Console.WriteLine("Checking if any client asked to connect.");
-
-            if (_meAsServerTcpListener.Server.Connected)
+            if(_meAsServerUdpClient == null)
             {
-                _meAsServerTcpListener.Server.Receive(message);
-                Console.WriteLine("Got a request message");
-                string myClientName;
-                if (TryParseRequestMessage(message, out myClientName))
-                {
-
-                    byte[] offerMessage = GetOfferMessage();
-
-                    // Send back a response.
-                    Console.WriteLine("Sent offer message");
-                    _meAsServerTcpListener.Server.Send(offerMessage);
-                }
-
-
+                _meAsServerUdpClient = new UdpClient(cUDPBroadcatPort);
+                _meAsServerUdpClient.Connect(_localIp, cUDPBroadcatPort);
+                _meAsServerUdpClient.Client.ReceiveTimeout = 1000;
             }
-            if (!_meAsServerTcpListener.Pending())
-            {
-                _meAsServerTcpListener.Stop();
-                Console.WriteLine("No client asked to connect.");
-
-                return false;
-
-            }
-
-            //_myClientTcpClient = _meAsServerTcpListener.AcceptTcpClient();
-            //if (_myClientTcpClient != null)
-            //{
-
-            //    string requestMessage = null;
-
-            //    // Get a stream object for reading and writing
-            //    NetworkStream stream = _myClientTcpClient.GetStream();
-            //    Byte[] bytes = new Byte[256];
-
-            //    int i;
-
-            //    // Loop to receive all the data sent by the client.
-            //    while ((i = stream.Read(bytes, 0, bytes.Length)) != 0)
-            //    {
-
-            //        Console.WriteLine("Got a request message");
-            //        // Translate data bytes to a ASCII string.
-            //        requestMessage = System.Text.Encoding.ASCII.GetString(bytes, 0, i);
-
-            //        byte[] offerMessage = GetOfferMessage();
-
-            //        // Send back a response.
-            //        Console.WriteLine("Sent offer message");
-            //        stream.Write(offerMessage, 0, offerMessage.Length);
-            //    }
-            //}
-            return _myClientTcpClient != null && _myClientTcpClient.Client != null && _myClientTcpClient.Client.Connected; 
-
-
-
-        }
-
-        private bool TryParseRequestMessage(byte[] message, out string myClientName)
-        {
+            IPEndPoint remoteIpEndPoint = new IPEndPoint(IPAddress.Broadcast, cUDPBroadcatPort);
+            Console.WriteLine("Checking if any clients asked to connect.");
             try
             {
-                if (message.Length == 20)
+                Byte[] req = new Byte[20];
+                req = _meAsServerUdpClient.Receive(ref remoteIpEndPoint);
+                string hostName = Encoding.ASCII.GetString(req, 0, 16);
+                //string randomNum = Encoding.ASCII.GetString(req, 16, 4);
+                if (hostName.Contains("Networking17") && hostName != _programName)
                 {
-                    byte[] clientNameInBytes = new byte[16];
-                    int lastByteRead = 0;
-                    for (int i = 0; i < clientNameInBytes.Length; i++)
-                    {
-                        clientNameInBytes[i] = message[lastByteRead];
-                        lastByteRead++;
-                    }
-                    myClientName = System.Text.Encoding.Default.GetString(clientNameInBytes);
+                    Console.WriteLine("Got a request message");
+                    Byte[] offer = GetOfferMessage(req);
+                    //Byte[] offer = Encoding.ASCII.GetBytes(_programName + randomNum + _localIp + _myServerPort);
+                    _meAsServerUdpClient.Send(offer, 32);
+                    Console.WriteLine("Sent offer message");
                     return true;
                 }
-
             }
             catch
             {
-
+                Console.WriteLine("No clients asked to connect.");
+                return false;
             }
-            myClientName = String.Empty;
             return false;
+
         }
 
-        public byte[] GetOfferMessage()
+        public byte[] GetOfferMessage(Byte[] request)
         {
+            string reqNum = Encoding.ASCII.GetString(request, 16, 4);
             byte[] programNameInBytes = System.Text.Encoding.ASCII.GetBytes(_programName);
-            byte[] numberInBytes = BitConverter.GetBytes(_randomNumber);
+            byte[] numberInBytes = System.Text.Encoding.ASCII.GetBytes(reqNum);
             byte[] localIPInBytes = _localIp.GetAddressBytes();
             byte[] listeningPortInBytes = BitConverter.GetBytes(_meAsServerListeningPort);
 
 
-            byte[] requestMessage = new byte[programNameInBytes.Length+ numberInBytes.Length+ localIPInBytes.Length+ listeningPortInBytes.Length];
+            byte[] offerMessage = new byte[programNameInBytes.Length+ numberInBytes.Length+ localIPInBytes.Length+ listeningPortInBytes.Length];
             int lastByteWritten = 0;
             for (int i = 0; i < programNameInBytes.Length; i++)
             {
-                requestMessage[lastByteWritten] = programNameInBytes[i];
+                offerMessage[lastByteWritten] = programNameInBytes[i];
                 lastByteWritten++;
             }
             for (int i = 0; i < numberInBytes.Length; i++)
             {
-                requestMessage[lastByteWritten] = numberInBytes[i];
+                offerMessage[lastByteWritten] = numberInBytes[i];
                 lastByteWritten++;
 
             }
             for (int i = 0; i < localIPInBytes.Length; i++)
             {
-                requestMessage[lastByteWritten] = localIPInBytes[i];
+                offerMessage[lastByteWritten] = localIPInBytes[i];
                 lastByteWritten++;
 
             }
             for (int i = 0; i < listeningPortInBytes.Length; i++)
             {
-                requestMessage[lastByteWritten] = listeningPortInBytes[i];
+                offerMessage[lastByteWritten] = listeningPortInBytes[i];
                 lastByteWritten++;
 
             }
 
-            return requestMessage;
+            return offerMessage;
 
         }
 
@@ -328,28 +502,9 @@ namespace CommunicationLab2
             return -1;
         
         }
-        #endregion
 
-        #region rx-off-tx-on
-        public void RunRXoffTXon()
-        {
-
-        }
-        #endregion
-
-        #region rx-on-tx-off
-        public void RunRXonTXoff()
-        {
-
-        }
-        #endregion
-
-        #region rx-on-tx-on
-        public void RunRXonTXon()
-        {
-
-        }
-        #endregion
+        
+        
 
 
         public static IPAddress GetLocalIPAddress()
