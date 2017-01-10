@@ -168,7 +168,7 @@ namespace CommunicationLab2
                 _meAsServerTcpListener = new TcpListener(localAddr, _meAsServerListeningPort);
                 _meAsServerTcpListener.Server.ReceiveTimeout = 1000;
             }
-            Thread.Sleep(1000);
+            //Thread.Sleep(1000);
             Console.WriteLine("Checking if any clients asked to connect.");
             _meAsServerTcpListener.Start();
             if (!_meAsServerTcpListener.Pending())
