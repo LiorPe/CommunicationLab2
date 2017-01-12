@@ -21,7 +21,7 @@ namespace CommunicationLab2
         //to remove
         int cMinListeningTCPPort = 6001;
         int cMaxListeningTCPPort = 7000;
-        string _programName = "L&I_Networking17";
+        string _programName = "FuckNetworking17";
         IPAddress localAddr = GetLocalIPAddress();
 
         short _meAsServerListeningPort;
@@ -75,8 +75,10 @@ namespace CommunicationLab2
                 {
                     RunRXonTXon();
                 }
-            //UpdateLog();
             }
+            UpdateLog();
+
+
         }
 
         private void UpdateLog()
@@ -166,6 +168,7 @@ namespace CommunicationLab2
             //IDO: input rcvd from user -> send msg to server
             //IDO: incoming TCP connection attempt -> connect to client -> RXonTXon
             ListenToRequestMessages();
+            // If was the first link and client connected to me - stop threat taking user Input
             if (rx == Mode.On)
             {
                 if (InputThread != null)
@@ -197,13 +200,10 @@ namespace CommunicationLab2
         {
             //IDO: stop sending req msg/looking for servers
             //IDO: msg rcvd from client -> print msg to terminal
-            /*if (!_myTcpServer.IsConnected())
-            {
-                runProg = false;
-                Console.WriteLine("The client has ended the connection. Press Enter to exit the program.");
-                Console.ReadLine();
-            }*/
-            PrintClientMessage();
+            string message;
+            message = GetMessageFromClient();
+            if (message != "")
+                Console.WriteLine("Message received: " + message);
         }
 
         //yes-send/yes-receive
@@ -216,22 +216,34 @@ namespace CommunicationLab2
                 Console.WriteLine("The host and/or client has ended the connection. Press Enter to exit the program.");
                 Console.ReadLine();
             }
+            string message = GetMessageFromClient();
+            if (message != "")
+            {
+                string altered_message = AlterMessage(message);
+                SendMessageToServer(message);
+            }
+        }
+
+        public string GetMessageFromClient()
+        {
             string message;
             bool isClientConnected = _myTcpServer.TryGetMessageFromClient(out message);
             if (!isClientConnected)
             {
                 runProg = false;
+                Console.WriteLine("The host and/or client has ended the connection. Press Enter to exit the program.");
+                Console.ReadLine();
             }
-                
-            if(message != "")
+            return message;
+        }
+
+        public void SendMessageToServer(string message)
+        {
+            if (!_myTcpClient.EnqueueMessageToSned(message))
             {
-                string altered_message = AlterMessage(message);
-                if(!_myTcpClient.EnqueueMessageToSned(altered_message))
-                {
-                    runProg = false;
-                    Console.WriteLine("The host has ended the connection. Press Enter to exit the program.");
-                    Console.ReadLine();
-                }
+                runProg = false;
+                Console.WriteLine("The host has ended the connection. Press Enter to exit the program.");
+                Console.ReadLine();
             }
         }
 
@@ -244,18 +256,7 @@ namespace CommunicationLab2
             {
                 Console.WriteLine("Enter message:");
                 string input = Console.ReadLine();
-                try
-                {
-                    _myTcpClient.EnqueueMessageToSned(input);
-                }
-                catch (Exception e)
-                {
-                    runProg = false;
-                    Console.WriteLine("The host has ended the connection. Press Enter to exit the program.");
-                    Console.ReadLine();
-                    break;
-                }
-                
+                SendMessageToServer(input); 
             }
         }
 
@@ -280,24 +281,7 @@ namespace CommunicationLab2
         }
 
 
-        private void PrintClientMessage()
-        {
-            //IDO: listen for msg -> print msg
-            string message;
-            bool isClientConnected = _myTcpServer.TryGetMessageFromClient(out message);
-            if (!isClientConnected)
-            {
-                runProg = false;
-
-            }
-
-            if(message != "")
-                Console.WriteLine("Message received: " + message);
-        }
-
         #region Set First Connection
-
-
 
         private short FindFirstAvailableListeningPort()
         {
