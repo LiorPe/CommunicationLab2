@@ -48,9 +48,9 @@ namespace CommunicationLab2
                 {
                     //_tcpListener.AcceptTcpClient();
                     _ConnectedTCPClient = _tcpListener.AcceptTcpClient();
+                    _isClientConnected = true;
                     if (!IsThread)
                         ReceiveLoop();
-                    _isClientConnected = true;
                     return true;
                 }
                 catch
@@ -74,9 +74,7 @@ namespace CommunicationLab2
                 string msg = "";
                 try
                 {
-                    mutex.WaitOne();
-                    _isClientConnected = _ConnectedTCPClient.Connected;
-                    mutex.ReleaseMutex();
+
                     var stream = _ConnectedTCPClient.GetStream();
                     int i;
                     Byte[] bytes = new Byte[256];
@@ -92,7 +90,9 @@ namespace CommunicationLab2
                 }
                 catch
                 {
-                    _isClientConnected = false;
+                    mutex.WaitOne();
+                    _isClientConnected = _ConnectedTCPClient.Connected;
+                    mutex.ReleaseMutex();
                 }
             }
         }
@@ -101,7 +101,7 @@ namespace CommunicationLab2
         {
             mutex.WaitOne();
             bool isClientConnect = _isClientConnected;
-            if (MessageQueue.Count == 0)
+            if (MessageQueue.Count > 0)
             {
                 message = String.Empty;
                 message = MessageQueue.Dequeue();
