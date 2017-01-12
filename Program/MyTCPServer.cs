@@ -74,7 +74,7 @@ namespace CommunicationLab2
                     var stream = _ConnectedTCPClient.GetStream();
                     int i;
                     Byte[] bytes = new Byte[256];
-                    while ((i = stream.Read(bytes, 0, bytes.Length)) != 0)
+                    i = stream.Read(bytes, 0, bytes.Length);
                         msg = System.Text.Encoding.ASCII.GetString(bytes, 0, i);
                     stream.Flush();
                     if (msg != "")
