@@ -66,20 +66,23 @@ namespace CommunicationLab2
 
         private void _GetMessageFromClient()
         {
-            string msg = "";
-            try
+            while(true)
             {
-                var stream = _ConnectedTCPClient.GetStream();
-                int i;
-                Byte[] bytes = new Byte[256];
-                while ((i = stream.Read(bytes, 0, bytes.Length)) != 0)
-                    msg = System.Text.Encoding.ASCII.GetString(bytes, 0, i);
-                stream.Flush();
-                if(msg != "")
-                    MessageQueue.Enqueue(msg);
-            }
-            catch
-            {
+                string msg = "";
+                try
+                {
+                    var stream = _ConnectedTCPClient.GetStream();
+                    int i;
+                    Byte[] bytes = new Byte[256];
+                    while ((i = stream.Read(bytes, 0, bytes.Length)) != 0)
+                        msg = System.Text.Encoding.ASCII.GetString(bytes, 0, i);
+                    stream.Flush();
+                    if (msg != "")
+                        MessageQueue.Enqueue(msg);
+                }
+                catch
+                {
+                }
             }
         }
 
