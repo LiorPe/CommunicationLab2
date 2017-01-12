@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace CommunicationLab2
+namespace NetworkingLab
 {
     public class MyTCPClient
     {

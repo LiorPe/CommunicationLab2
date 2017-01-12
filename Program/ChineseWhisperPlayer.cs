@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace CommunicationLab2
+namespace NetworkingLab
 {
     /// <summary>
     /// Logic for main class for Chinese Whisper ("Broken Phone")

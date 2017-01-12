@@ -7,7 +7,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CommunicationLab2
+namespace NetworkingLab
 {
     public class MyUDPServer
     {

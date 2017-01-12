@@ -8,7 +8,7 @@ using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Threading;
 
-namespace CommunicationLab2
+namespace NetworkingLab
 {
     public class  OfferMessage
     {

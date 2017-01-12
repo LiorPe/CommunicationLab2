@@ -5,25 +5,18 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
-using CommunicationLab2;
 
-namespace Test
+ namespace NetworkingLab
+
 {
     class Program
     {
         static void Main(string[] args)
         {
             ChineseWhisperPlayer cwp = new ChineseWhisperPlayer();
-            string serverName;
-            IPAddress ip;
-            short port;
             cwp.Run();
 
         }
-
-
-
-
-
+        
     }
 }

@@ -4,13 +4,14 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{2D960151-3391-4C67-B3F7-06ED2713F812}</ProjectGuid>
+    <ProjectGuid>{0789A9AE-5F16-4AF0-B20D-B187E4C81E26}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Test2</RootNamespace>
-    <AssemblyName>Test2</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <RootNamespace>NetworkingLab</RootNamespace>
+    <AssemblyName>Program</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -43,14 +44,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ChineseWhisperPlayer.cs" />
+    <Compile Include="Logger.cs" />
+    <Compile Include="OfferMessage.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Program\CommunicationLab2.csproj">
-      <Project>{0789a9ae-5f16-4af0-b20d-b187e4c81e26}</Project>
-      <Name>CommunicationLab2</Name>
-    </ProjectReference>
+    <Compile Include="RequestMessage.cs" />
+    <Compile Include="MyTCPClient.cs" />
+    <Compile Include="MyTCPServer.cs" />
+    <Compile Include="MyUDPClient.cs" />
+    <Compile Include="MyUDPServer.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
