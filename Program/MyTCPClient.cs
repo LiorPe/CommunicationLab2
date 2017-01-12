@@ -22,7 +22,7 @@ namespace CommunicationLab2
 
         public bool IsConnected()
        {
-           return _tcpClient.Connected;
+            return _tcpClient.Connected;
        }
 
         public bool TryConnectToServer(IPAddress serverIP, short serverPort)
