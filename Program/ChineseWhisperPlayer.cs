@@ -220,7 +220,7 @@ namespace CommunicationLab2
             if(message != "")
             {
                 string altered_message = AlterMessage(message);
-                if(!_myTcpClient.SendMessage(altered_message))
+                if(!_myTcpClient.EnqueueMessageToSned(altered_message))
                 {
                     runProg = false;
                     Console.WriteLine("The host has ended the connection. Press Enter to exit the program.");
@@ -238,7 +238,7 @@ namespace CommunicationLab2
                 string input = Console.ReadLine();
                 try
                 {
-                    _myTcpClient.SendMessage(input);
+                    _myTcpClient.EnqueueMessageToSned(input);
                 }
                 catch (Exception e)
                 {

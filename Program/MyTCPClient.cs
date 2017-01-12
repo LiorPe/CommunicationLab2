@@ -19,12 +19,17 @@ namespace CommunicationLab2
        TcpClient _tcpClient;
        Thread OutputThread;
         bool IsThread = false;
+        bool _connectedToServer = false;
 
 
         public bool IsConnected()
        {
-            return _tcpClient.Connected;
-       }
+            mutex.WaitOne();
+            bool isConnected = _connectedToServer;
+            mutex.ReleaseMutex();
+            return _connectedToServer;
+
+        }
 
         public bool TryConnectToServer(IPAddress serverIP, short serverPort)
         {
@@ -34,6 +39,7 @@ namespace CommunicationLab2
             try
             {
                 _tcpClient.Connect(serverIP, serverPort);
+                _connectedToServer = true;
                 MessageQueue = new Queue<string>();
                 if(!IsThread)
                     SendLoop();
@@ -49,53 +55,51 @@ namespace CommunicationLab2
 
         private void SendLoop()
         {
-            OutputThread = new Thread(_SendMessage);
+            OutputThread = new Thread(SendMessagesFromQueueToServer);
             OutputThread.Start();
             IsThread = true;
         }
 
-        private void _SendMessage()
+        private void SendMessagesFromQueueToServer()
         {
-            while(true)
+            while(_connectedToServer)
             {
                 mutex.WaitOne();
                 if(MessageQueue.Count > 0)
                 {
                     string message = MessageQueue.Dequeue();
-                    mutex.ReleaseMutex();
-                    NetworkStream stream = _tcpClient.GetStream();
-                    byte[] userMessage = System.Text.Encoding.ASCII.GetBytes(message);
-                    try
+                    if(_tcpClient.Connected)
                     {
-                        stream.Write(userMessage, 0, userMessage.Length);
+                        mutex.ReleaseMutex();
+                        NetworkStream stream = _tcpClient.GetStream();
+                        byte[] userMessage = System.Text.Encoding.ASCII.GetBytes(message);
+                        try
+                        {
+                            stream.Write(userMessage, 0, userMessage.Length);
+                        }
+                        catch
+                        {
+                        }
                     }
-                    catch
+                    else
                     {
+                        _connectedToServer = false;
+                        mutex.ReleaseMutex();
                     }
 
+
                 }
+                else mutex.ReleaseMutex();
             }
         }
 
-        public bool SendMessage(string message)
+        public bool EnqueueMessageToSned (string message)
         {
             mutex.WaitOne();
             MessageQueue.Enqueue(message);
+            bool isConnctedToServer = _connectedToServer;
             mutex.ReleaseMutex();
-            if (!_tcpClient.Connected)
-                return false;
-            return true;
-            /*NetworkStream stream = _tcpClient.GetStream();
-            byte[] userMessage = System.Text.Encoding.ASCII.GetBytes(message);
-            try
-            {
-                stream.Write(userMessage, 0, userMessage.Length);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }*/
+            return isConnctedToServer;
         }
 
 
