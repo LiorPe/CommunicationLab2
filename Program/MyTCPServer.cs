@@ -102,8 +102,11 @@ namespace CommunicationLab2
             mutex.WaitOne();
             bool isClientConnect = _isClientConnected;
             if (MessageQueue.Count == 0)
+            {
                 message = String.Empty;
-            message = MessageQueue.Dequeue(); ;
+                message = MessageQueue.Dequeue();
+            }
+            else message = "";
             mutex.ReleaseMutex();
             return isClientConnect;
 
