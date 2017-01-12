@@ -21,7 +21,7 @@ namespace CommunicationLab2
         //to remove
         int cMinListeningTCPPort = 6001;
         int cMaxListeningTCPPort = 7000;
-        string _programName = "FuckNetworking17";
+        string _programName = "ISISNetworking17";
         IPAddress localAddr = GetLocalIPAddress();
 
         short _meAsServerListeningPort;
@@ -220,7 +220,7 @@ namespace CommunicationLab2
             if (message != "")
             {
                 string altered_message = AlterMessage(message);
-                SendMessageToServer(message);
+                SendMessageToServer(altered_message);
             }
         }
 
