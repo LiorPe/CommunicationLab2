@@ -21,7 +21,7 @@ namespace CommunicationLab2
         //to remove
         int cMinListeningTCPPort = 6001;
         int cMaxListeningTCPPort = 7000;
-        string _programName = "L&I_Networking17";
+        string _programName = "IsisNetworking17";
         IPAddress localAddr = GetLocalIPAddress();
 
         short _meAsServerListeningPort;
