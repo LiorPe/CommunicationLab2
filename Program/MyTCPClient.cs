@@ -14,6 +14,7 @@ namespace CommunicationLab2
        public IPAddress ServerIP { get; set; }
        public short ServerPort { get; set; }
        public Queue<string> MessageQueue { get; set; }
+        Mutex mutex = new Mutex();
 
        TcpClient _tcpClient;
        Thread OutputThread;
@@ -57,9 +58,11 @@ namespace CommunicationLab2
         {
             while(true)
             {
+                mutex.WaitOne();
                 if(MessageQueue.Count > 0)
                 {
                     string message = MessageQueue.Dequeue();
+                    mutex.ReleaseMutex();
                     NetworkStream stream = _tcpClient.GetStream();
                     byte[] userMessage = System.Text.Encoding.ASCII.GetBytes(message);
                     try
@@ -76,7 +79,9 @@ namespace CommunicationLab2
 
         public bool SendMessage(string message)
         {
+            mutex.WaitOne();
             MessageQueue.Enqueue(message);
+            mutex.ReleaseMutex();
             if (!_tcpClient.Connected)
                 return false;
             return true;

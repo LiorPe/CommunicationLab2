@@ -17,6 +17,7 @@ namespace CommunicationLab2
         Thread InputThread;
         bool IsThread = false;
         public Queue<string> MessageQueue { get; set; }
+        Mutex mutex = new Mutex();
 
         public MyTCPServer(IPAddress ip ,short listeningPort)
         {
@@ -78,7 +79,11 @@ namespace CommunicationLab2
                         msg = System.Text.Encoding.ASCII.GetString(bytes, 0, i);
                     stream.Flush();
                     if (msg != "")
+                    {
+                        mutex.WaitOne();
                         MessageQueue.Enqueue(msg);
+                        mutex.ReleaseMutex();
+                    }
                 }
                 catch
                 {
@@ -88,9 +93,15 @@ namespace CommunicationLab2
 
         public string GetMessageFromClient()
         {
+            mutex.WaitOne();
             if (MessageQueue.Count == 0)
+            {
+                mutex.ReleaseMutex();
                 return "";
-            return MessageQueue.Dequeue();
+            }
+            string message = MessageQueue.Dequeue(); ;
+            mutex.ReleaseMutex();
+            return message;
             /*string msg = "";
             try
             {
