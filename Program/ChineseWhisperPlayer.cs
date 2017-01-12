@@ -216,7 +216,13 @@ namespace CommunicationLab2
                 Console.WriteLine("The host and/or client has ended the connection. Press Enter to exit the program.");
                 Console.ReadLine();
             }
-            string message = _myTcpServer.GetMessageFromClient();
+            string message;
+            bool isClientConnected = _myTcpServer.TryGetMessageFromClient(out message);
+            if (!isClientConnected)
+            {
+                runProg = false;
+            }
+                
             if(message != "")
             {
                 string altered_message = AlterMessage(message);
@@ -228,6 +234,8 @@ namespace CommunicationLab2
                 }
             }
         }
+
+
 
         private void ReadMessageFromConsoleAndSendToServer()
         {
@@ -275,7 +283,14 @@ namespace CommunicationLab2
         private void PrintClientMessage()
         {
             //IDO: listen for msg -> print msg
-            string message = _myTcpServer.GetMessageFromClient();
+            string message;
+            bool isClientConnected = _myTcpServer.TryGetMessageFromClient(out message);
+            if (!isClientConnected)
+            {
+                runProg = false;
+
+            }
+
             if(message != "")
                 Console.WriteLine("Message received: " + message);
         }

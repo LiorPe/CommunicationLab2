@@ -18,6 +18,7 @@ namespace CommunicationLab2
         bool IsThread = false;
         public Queue<string> MessageQueue { get; set; }
         Mutex mutex = new Mutex();
+        bool _isClientConnected = false;
 
         public MyTCPServer(IPAddress ip ,short listeningPort)
         {
@@ -31,7 +32,7 @@ namespace CommunicationLab2
 
         public bool IsConnected()
         {
-            return _ConnectedTCPClient.Connected;
+            return _isClientConnected; //_ConnectedTCPClient.Connected;
         }
 
         public bool CheckIfClientConnected()
@@ -49,6 +50,7 @@ namespace CommunicationLab2
                     _ConnectedTCPClient = _tcpListener.AcceptTcpClient();
                     if (!IsThread)
                         ReceiveLoop();
+                    _isClientConnected = true;
                     return true;
                 }
                 catch
@@ -67,11 +69,14 @@ namespace CommunicationLab2
 
         private void _GetMessageFromClient()
         {
-            while(true)
+            while(_isClientConnected)
             {
                 string msg = "";
                 try
                 {
+                    mutex.WaitOne();
+                    _isClientConnected = _ConnectedTCPClient.Connected;
+                    mutex.ReleaseMutex();
                     var stream = _ConnectedTCPClient.GetStream();
                     int i;
                     Byte[] bytes = new Byte[256];
@@ -87,34 +92,21 @@ namespace CommunicationLab2
                 }
                 catch
                 {
+                    _isClientConnected = false;
                 }
             }
         }
 
-        public string GetMessageFromClient()
+        public bool TryGetMessageFromClient(out string message)
         {
             mutex.WaitOne();
+            bool isClientConnect = _isClientConnected;
             if (MessageQueue.Count == 0)
-            {
-                mutex.ReleaseMutex();
-                return "";
-            }
-            string message = MessageQueue.Dequeue(); ;
+                message = String.Empty;
+            message = MessageQueue.Dequeue(); ;
             mutex.ReleaseMutex();
-            return message;
-            /*string msg = "";
-            try
-            {
-                var stream = _ConnectedTCPClient.GetStream();
-                int i;
-                Byte[] bytes = new Byte[256];
-                while ((i = stream.Read(bytes, 0, bytes.Length)) != 0)
-                    msg = System.Text.Encoding.ASCII.GetString(bytes, 0, i);
-                stream.Flush();
-            } catch
-            { 
-            }
-            return msg;*/
+            return isClientConnect;
+
         }
 
 
