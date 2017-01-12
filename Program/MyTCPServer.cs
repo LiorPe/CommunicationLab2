@@ -102,19 +102,6 @@ namespace CommunicationLab2
             string message = MessageQueue.Dequeue(); ;
             mutex.ReleaseMutex();
             return message;
-            /*string msg = "";
-            try
-            {
-                var stream = _ConnectedTCPClient.GetStream();
-                int i;
-                Byte[] bytes = new Byte[256];
-                while ((i = stream.Read(bytes, 0, bytes.Length)) != 0)
-                    msg = System.Text.Encoding.ASCII.GetString(bytes, 0, i);
-                stream.Flush();
-            } catch
-            { 
-            }
-            return msg;*/
         }
 
 

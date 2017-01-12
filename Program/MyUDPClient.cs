@@ -16,6 +16,10 @@ namespace CommunicationLab2
         UdpClient _meAsClientUdpClient;
         IPEndPoint ep;
 
+        /// <summary>
+        /// ctor for the myUDPClient class
+        /// </summary>
+        /// <param name="progName">Running program name for logging purposes</param>
         public MyUDPClient(string progName)
         {
             _programName = progName;
@@ -23,6 +27,9 @@ namespace CommunicationLab2
         }
 
 
+        /// <summary>
+        /// Logic for UDP client init
+        /// </summary>
         private void InitClient()
         {
             if (_meAsClientUdpClient != null)
@@ -33,6 +40,10 @@ namespace CommunicationLab2
             _meAsClientUdpClient.Client.ReceiveTimeout = 1000;
         }
 
+        /// <summary>
+        /// Sends a RequestMEssage via UDP
+        /// </summary>
+        /// <param name="randNum">Random number required for building the RequestMessage</param>
         public void SendRequestMessage(int randNum)
         {
             InitClient();
@@ -41,6 +52,11 @@ namespace CommunicationLab2
             _meAsClientUdpClient.Send(request, request.Length, new IPEndPoint(IPAddress.Broadcast, cUDPBroadcatPort));
         }
 
+        /// <summary>
+        /// Listens for UDP messages
+        /// </summary>
+        /// <param name="response">out param for message</param>
+        /// <returns>true if message received</returns>
         public bool ListenToOffers(out byte[] response)
         {
             try

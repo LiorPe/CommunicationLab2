@@ -73,7 +73,7 @@ namespace CommunicationLab2
                     {
                     }
 
-                }
+                } else mutex.ReleaseMutex();
             }
         }
 
@@ -85,25 +85,7 @@ namespace CommunicationLab2
             if (!_tcpClient.Connected)
                 return false;
             return true;
-            /*NetworkStream stream = _tcpClient.GetStream();
-            byte[] userMessage = System.Text.Encoding.ASCII.GetBytes(message);
-            try
-            {
-                stream.Write(userMessage, 0, userMessage.Length);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }*/
         }
-
-
-
-
-
-
-
 
     }
 }

@@ -18,7 +18,11 @@ namespace CommunicationLab2
         IPAddress _localIp = GetLocalIPAddress();
         IPEndPoint ep;
 
-
+        /// <summary>
+        /// ctor for the MyUDPServer class
+        /// </summary>
+        /// <param name="progName">Running program name for logging purposes</param>
+        /// <param name="port">Listening port for the UDP server</param>
         public MyUDPServer(string progName, short port)
         {
             _programName = progName;
@@ -27,7 +31,9 @@ namespace CommunicationLab2
 
         }
 
-
+        /// <summary>
+        /// Logic for UDP server init
+        /// </summary>
         private void InitServer()
         {
             if (_meAsClientUdpServer != null)
@@ -36,6 +42,10 @@ namespace CommunicationLab2
             _meAsClientUdpServer.Client.ReceiveTimeout = 1000;
         }
 
+        /// <summary>
+        /// Gets the machine's local IP
+        /// </summary>
+        /// <returns>Local IP as IPAddress</returns>
         public static IPAddress GetLocalIPAddress()
         {
             var host = Dns.GetHostEntry(Dns.GetHostName());
@@ -49,6 +59,11 @@ namespace CommunicationLab2
             throw new Exception("Local IP Address Not Found!");
         }
 
+        /// <summary>
+        /// Listens for UDP messages
+        /// </summary>
+        /// <param name="response">out param for message</param>
+        /// <returns>true if message received</returns>
         public bool ListenToRequests(out byte[] response)
         {
             InitServer();
@@ -73,6 +88,10 @@ namespace CommunicationLab2
 
         }
 
+        /// <summary>
+        /// Sends an offer message via UDP
+        /// </summary>
+        /// <param name="rMsg">the RequestMessage object to be sent</param>
         public void SendOffer(RequestMessage rMsg)
         {
             OfferMessage oMsg = new OfferMessage(_programName ,rMsg.RandNumber, _localIp, ListeningPort);

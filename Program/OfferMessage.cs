@@ -17,6 +17,13 @@ namespace CommunicationLab2
         public IPAddress ServerIPAddress { get; set; }
         public short ServerListeningPort {get;set;}
 
+        /// <summary>
+        /// ctor for the OfferMessage class
+        /// </summary>
+        /// <param name="serverName">Offering server's name</param>
+        /// <param name="randNumber">Random number for message identification</param>
+        /// <param name="serverIPAdress">Offering server's IP address</param>
+        /// <param name="serverListeningPort">Offered listening port</param>
         public OfferMessage(string serverName, int randNumber, IPAddress serverIPAdress, short serverListeningPort)
         {
             ServerName = serverName;
@@ -24,6 +31,11 @@ namespace CommunicationLab2
             ServerIPAddress = serverIPAdress;
             ServerListeningPort = serverListeningPort;
         }
+
+        /// <summary>
+        /// ctor for the OfferMessage class
+        /// </summary>
+        /// <param name="offerMessageInBytes">Byte array containing the message itself</param>
         public OfferMessage(Byte[] offerMessageInBytes)
         {
                     byte[] serverNameInBytes = new byte[16];
@@ -57,6 +69,10 @@ namespace CommunicationLab2
                     ServerIPAddress = new IPAddress(serverIpInBytes);
                     ServerListeningPort = BitConverter.ToInt16(serverPortInBytes, 0);
         }
+        /// <summary>
+        /// Returns the message itself as a Byte array
+        /// </summary>
+        /// <returns>Byte array containing the message itself</returns>
         public byte[] ToByteArray()
         {
             byte[] programNameInBytes = System.Text.Encoding.ASCII.GetBytes(ServerName);
@@ -94,6 +110,13 @@ namespace CommunicationLab2
             return offerMessage;
         }
 
+        /// <summary>
+        /// Validates an offer message
+        /// </summary>
+        /// <param name="receiveBytes">the message as a Byte array</param>
+        /// <param name="myProgramName">running program's name</param>
+        /// <param name="myID">random number associated with the sent request message</param>
+        /// <returns>true if valid message</returns>
         public static bool TryParseOfferMessage(byte[] receiveBytes , string myProgramName, int myID)
         {
             try
@@ -144,6 +167,10 @@ namespace CommunicationLab2
             return false;
         }
 
+        /// <summary>
+        /// ToString override
+        /// </summary>
+        /// <returns>String representation of message</returns>
         public override string ToString()
         {
             return String.Format("Server name:{0} , Random number:{1}, IP:{2}, Port:{3}", ServerName, RandNumber, ServerIPAddress, ServerListeningPort);

@@ -14,12 +14,22 @@ namespace CommunicationLab2
         public string ClientName { get; set; }
         public int RandNumber { get; set; }
 
+        /// <summary>
+        /// ctor for the RequestMessage class
+        /// </summary>
+        /// <param name="serverName">Requesting client's name</param>
+        /// <param name="randNumber">Random number for message identification</param>
         public RequestMessage(string clientName, int randNumber)
         {
             ClientName = clientName;
             RandNumber = randNumber;
 
         }
+
+        /// <summary>
+        /// ctor for the RequestMessage class
+        /// </summary>
+        /// <param name="offerMessageInBytes">Byte array containing the message itself</param>
         public RequestMessage(Byte[] offerMessageInBytes)
         {
                     byte[] clientNameInBytes = new byte[16];
@@ -39,6 +49,11 @@ namespace CommunicationLab2
                     ClientName = System.Text.Encoding.Default.GetString(clientNameInBytes);
                     RandNumber = BitConverter.ToInt32(randNumber, 0);
         }
+
+        /// <summary>
+        /// Returns the message itself as a Byte array
+        /// </summary>
+        /// <returns>Byte array containing the message itself</returns>
         public byte[] ToByteArray()
         {
             byte[] clientNameInBytes = System.Text.Encoding.ASCII.GetBytes(ClientName);
@@ -60,6 +75,12 @@ namespace CommunicationLab2
             return requestMessageInBytes;
         }
 
+        /// <summary>
+        /// Validates a request message
+        /// </summary>
+        /// <param name="receiveBytes">the message as a Byte array</param>
+        /// <param name="myProgramName">running program's name</param>
+        /// <returns>true if valid message</returns>
         public static bool TryParseRequestMessage(byte[] receiveBytes, string myProgramName)
         {
             try
@@ -92,6 +113,11 @@ namespace CommunicationLab2
             return false;
         }
 
+
+        /// <summary>
+        /// ToString override
+        /// </summary>
+        /// <returns>String representation of message</returns>
         public override string ToString()
         {
             return String.Format("Server name:{0} , Random number:{1}", ClientName, RandNumber);
