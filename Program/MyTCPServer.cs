@@ -47,7 +47,7 @@ namespace CommunicationLab2
                     //_tcpListener.AcceptTcpClient();
                     _ConnectedTCPClient = _tcpListener.AcceptTcpClient();
                     if (!IsThread)
-                        RecieveLoop();
+                        ReceiveLoop();
                     return true;
                 }
                 catch
@@ -57,7 +57,7 @@ namespace CommunicationLab2
             }
         }
 
-        private void RecieveLoop()
+        private void ReceiveLoop()
         {
             InputThread = new Thread(_GetMessageFromClient);
             InputThread.Start();
@@ -75,7 +75,8 @@ namespace CommunicationLab2
                 while ((i = stream.Read(bytes, 0, bytes.Length)) != 0)
                     msg = System.Text.Encoding.ASCII.GetString(bytes, 0, i);
                 stream.Flush();
-                MessageQueue.Enqueue(msg);
+                if(msg != "")
+                    MessageQueue.Enqueue(msg);
             }
             catch
             {
@@ -84,6 +85,8 @@ namespace CommunicationLab2
 
         public string GetMessageFromClient()
         {
+            if (MessageQueue.Count == 0)
+                return "";
             return MessageQueue.Dequeue();
             /*string msg = "";
             try
