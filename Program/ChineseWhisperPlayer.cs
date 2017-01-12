@@ -21,7 +21,7 @@ namespace CommunicationLab2
         //to remove
         int cMinListeningTCPPort = 6001;
         int cMaxListeningTCPPort = 7000;
-        string _programName = "fuckNetworking17";
+        string _programName = "FuckNetworking17";
         IPAddress localAddr = GetLocalIPAddress();
 
         short _meAsServerListeningPort;
@@ -201,6 +201,9 @@ namespace CommunicationLab2
                 if(!_myTcpClient.IsConnected())
                 {
                     runProg = false;
+                    InputThread.Abort();
+                    InputThread.Join();
+                    InputThread = null;
                 }
                 if (!IsThread)
                 {
@@ -235,7 +238,7 @@ namespace CommunicationLab2
             {
                 Console.WriteLine("Message received: " + message);
                 string altered_message = AlterMessage(message);
-                //////////////////Console.WriteLine("New message: " + altered_message);
+                Console.WriteLine("New message: " + altered_message);
                 SendMessageToServer(altered_message);
             }
         }
