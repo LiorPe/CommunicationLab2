@@ -19,15 +19,11 @@ namespace CommunicationLab2
        TcpClient _tcpClient;
        Thread OutputThread;
         bool IsThread = false;
-        bool _connectedToServer = false;
 
 
         public bool IsConnected()
        {
-            mutex.WaitOne();
-            bool isConnected = _connectedToServer;
-            mutex.ReleaseMutex();
-            return _connectedToServer;
+            return _tcpClient.Connected;
 
         }
 
@@ -39,7 +35,6 @@ namespace CommunicationLab2
             try
             {
                 _tcpClient.Connect(serverIP, serverPort);
-                _connectedToServer = true;
                 MessageQueue = new Queue<string>();
                 if(!IsThread)
                     SendLoop();
@@ -62,32 +57,22 @@ namespace CommunicationLab2
 
         private void SendMessagesFromQueueToServer()
         {
-            while(_connectedToServer)
+            while(_tcpClient.Connected)
             {
                 mutex.WaitOne();
-                if(MessageQueue.Count > 0)
+                if (MessageQueue.Count > 0)
                 {
                     string message = MessageQueue.Dequeue();
-                    if(_tcpClient.Connected)
+                    mutex.ReleaseMutex();
+                    NetworkStream stream = _tcpClient.GetStream();
+                    byte[] userMessage = System.Text.Encoding.ASCII.GetBytes(message);
+                    try
                     {
-                        mutex.ReleaseMutex();
-                        NetworkStream stream = _tcpClient.GetStream();
-                        byte[] userMessage = System.Text.Encoding.ASCII.GetBytes(message);
-                        try
-                        {
-                            stream.Write(userMessage, 0, userMessage.Length);
-                        }
-                        catch
-                        {
-                        }
+                        stream.Write(userMessage, 0, userMessage.Length);
                     }
-                    else
+                    catch
                     {
-                        _connectedToServer = false;
-                        mutex.ReleaseMutex();
                     }
-
-
                 }
                 else mutex.ReleaseMutex();
             }
@@ -97,9 +82,8 @@ namespace CommunicationLab2
         {
             mutex.WaitOne();
             MessageQueue.Enqueue(message);
-            bool isConnctedToServer = _connectedToServer;
             mutex.ReleaseMutex();
-            return isConnctedToServer;
+            return _tcpClient.Connected;
         }
 
 

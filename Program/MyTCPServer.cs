@@ -18,7 +18,6 @@ namespace CommunicationLab2
         bool IsThread = false;
         public Queue<string> MessageQueue { get; set; }
         Mutex mutex = new Mutex();
-        bool _isClientConnected = false;
 
         public MyTCPServer(IPAddress ip ,short listeningPort)
         {
@@ -32,7 +31,7 @@ namespace CommunicationLab2
 
         public bool IsConnected()
         {
-            return _isClientConnected; //_ConnectedTCPClient.Connected;
+            return _ConnectedTCPClient.Connected; //_ConnectedTCPClient.Connected;
         }
 
         public bool CheckIfClientConnected()
@@ -48,7 +47,6 @@ namespace CommunicationLab2
                 {
                     //_tcpListener.AcceptTcpClient();
                     _ConnectedTCPClient = _tcpListener.AcceptTcpClient();
-                    _isClientConnected = true;
                     if (!IsThread)
                         ReceiveLoop();
                     return true;
@@ -69,7 +67,7 @@ namespace CommunicationLab2
 
         private void _GetMessageFromClient()
         {
-            while(_isClientConnected)
+            while(_ConnectedTCPClient.Connected)
             {
                 string msg = "";
                 try
@@ -90,9 +88,6 @@ namespace CommunicationLab2
                 }
                 catch
                 {
-                    mutex.WaitOne();
-                    _isClientConnected = _ConnectedTCPClient.Connected;
-                    mutex.ReleaseMutex();
                 }
             }
         }
@@ -100,7 +95,6 @@ namespace CommunicationLab2
         public bool TryGetMessageFromClient(out string message)
         {
             mutex.WaitOne();
-            bool isClientConnect = _ConnectedTCPClient.Connected;
             if (MessageQueue.Count > 0)
             {
                 message = String.Empty;
@@ -108,7 +102,7 @@ namespace CommunicationLab2
             }
             else message = "";
             mutex.ReleaseMutex();
-            return isClientConnect;
+            return  _ConnectedTCPClient.Connected;
 
         }
 
