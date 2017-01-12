@@ -21,7 +21,7 @@ namespace CommunicationLab2
         //to remove
         int cMinListeningTCPPort = 6001;
         int cMaxListeningTCPPort = 7000;
-        string _programName = "FuckNetworking17";
+        string _programName = "L&I_Networking17";
         IPAddress localAddr = GetLocalIPAddress();
 
         short _meAsServerListeningPort;
@@ -103,7 +103,6 @@ namespace CommunicationLab2
             //IDO: no offers rcvd -> send req msg
             //IDO: incoming TCP connection attempt -> connect to client -> RXonTXoff
             //IDO: rcvd offer msg -> connect to server -> RXoffTXon
-
 
             SendRequestMessage();
             ListenToRequestMessages();
@@ -220,7 +219,9 @@ namespace CommunicationLab2
             string message = GetMessageFromClient();
             if (message != "")
             {
+                Console.WriteLine("Message received: " + message);
                 string altered_message = AlterMessage(message);
+                Console.WriteLine("New message: " + altered_message);
                 SendMessageToServer(altered_message);
             }
         }
