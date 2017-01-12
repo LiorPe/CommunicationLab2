@@ -168,7 +168,7 @@ namespace CommunicationLab2
             ListenToRequestMessages();
             if (rx == Mode.On)
             {
-                if(InputThread != null)
+                if (InputThread != null)
                 {
                     InputThread.Abort();
                     InputThread.Join();
@@ -176,11 +176,19 @@ namespace CommunicationLab2
                     IsThread = false;
                 }
             }
-            else if (!IsThread)
+            else
             {
-                InputThread = new Thread(ReadMessageFromConsoleAndSendToServer);
-                InputThread.Start();
-                IsThread = true;
+                if(!_myTcpClient.IsConnected())
+                {
+                    runProg = false;
+                    Console.WriteLine("The client has ended the connection. Press Enter to exit the program.");
+                }
+                if (!IsThread)
+                {
+                    InputThread = new Thread(ReadMessageFromConsoleAndSendToServer);
+                    InputThread.Start();
+                    IsThread = true;
+                }
             }
         }
 
