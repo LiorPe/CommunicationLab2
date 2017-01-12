@@ -197,12 +197,12 @@ namespace CommunicationLab2
         {
             //IDO: stop sending req msg/looking for servers
             //IDO: msg rcvd from client -> print msg to terminal
-            if (!_myTcpServer.IsConnected())
+            /*if (!_myTcpServer.IsConnected())
             {
                 runProg = false;
                 Console.WriteLine("The client has ended the connection. Press Enter to exit the program.");
                 Console.ReadLine();
-            }
+            }*/
             PrintClientMessage();
         }
 
