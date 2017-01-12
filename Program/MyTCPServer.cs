@@ -100,7 +100,7 @@ namespace CommunicationLab2
         public bool TryGetMessageFromClient(out string message)
         {
             mutex.WaitOne();
-            bool isClientConnect = _isClientConnected;
+            bool isClientConnect = _ConnectedTCPClient.Connected;
             if (MessageQueue.Count > 0)
             {
                 message = String.Empty;
