@@ -75,8 +75,8 @@ namespace CommunicationLab2
                 {
                     RunRXonTXon();
                 }
+            //UpdateLog();
             }
-            UpdateLog();
         }
 
         private void UpdateLog()
