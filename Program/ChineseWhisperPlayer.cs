@@ -104,6 +104,7 @@ namespace CommunicationLab2
             //IDO: incoming TCP connection attempt -> connect to client -> RXonTXoff
             //IDO: rcvd offer msg -> connect to server -> RXoffTXon
 
+
             SendRequestMessage();
             ListenToRequestMessages();
         }
@@ -220,7 +221,7 @@ namespace CommunicationLab2
             if (message != "")
             {
                 string altered_message = AlterMessage(message);
-                SendMessageToServer(message);
+                SendMessageToServer(altered_message);
             }
         }
 
