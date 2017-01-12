@@ -11,7 +11,9 @@ using System.Threading.Tasks;
 
 namespace CommunicationLab2
 {
-
+    /// <summary>
+    /// Logic for main class for Chinese Whisper ("Broken Phone")
+    /// </summary>
     public class ChineseWhisperPlayer
     {
         public enum Mode { On , Off};
@@ -21,7 +23,7 @@ namespace CommunicationLab2
         //to remove
         int cMinListeningTCPPort = 6001;
         int cMaxListeningTCPPort = 7000;
-        string _programName = "FuckNetworking17";
+        string _programName = "L&I_Networking17";
         IPAddress localAddr = GetLocalIPAddress();
 
         short _meAsServerListeningPort;
@@ -43,6 +45,9 @@ namespace CommunicationLab2
 
         bool statusChanged;
 
+        /// <summary>
+        ///ctor for ChineseWhisperPlayer class
+        /// </summary>
         public ChineseWhisperPlayer()
         {
             runProg = true;
@@ -58,6 +63,9 @@ namespace CommunicationLab2
 
         }
 
+        /// <summary>
+        /// Main running loop
+        /// </summary>
         public void Run()
         {
             while (runProg)
@@ -85,6 +93,9 @@ namespace CommunicationLab2
 
         }
 
+        /// <summary>
+        /// Print status message to screen and add to logger
+        /// </summary>
         private void UpdateLog()
         {
             if(statusChanged)
@@ -112,20 +123,19 @@ namespace CommunicationLab2
             }
         }
 
-        //no-send/no-receive
+        /// <summary>
+        /// Function for RXoffTXoff state
+        /// </summary>
         public void RunRXoffTXoff()
         {
-            //IDO: send req msg
-            //IDO: req msg rcvd -> send offer msg
-            //IDO: no offers rcvd -> send req msg
-            //IDO: incoming TCP connection attempt -> connect to client -> RXonTXoff
-            //IDO: rcvd offer msg -> connect to server -> RXoffTXon
 
             SendRequestMessage();
             ListenToRequestMessages();
         }
 
-        //updated
+        /// <summary>
+        /// Listen to UDP request messages
+        /// </summary>
         private void ListenToRequestMessages()
         {
             byte[] requestMessageInBytes;
@@ -149,12 +159,13 @@ namespace CommunicationLab2
             }
         }
 
-        //updated
+        /// <summary>
+        /// send a UDP request message
+        /// </summary>
         private void SendRequestMessage()
         {
             if (rx == Mode.Off)
             {
-                //Console.WriteLine("No new request messages.");'
                 byte[] responseForRequestMessage;
                 int randNumber = GenerateRandom();
                 _myUDPClient.SendRequestMessage(randNumber);
@@ -175,17 +186,14 @@ namespace CommunicationLab2
                 }
             }
         }
+        
 
-
-
-        //yes-send/no-receive
+        /// <summary>
+        /// Function for RXoffTXon state
+        /// </summary>
         public void RunRXoffTXon()
         {
-            //IDO: req msg rcvd -> send offer msg
-            //IDO: input rcvd from user -> send msg to server
-            //IDO: incoming TCP connection attempt -> connect to client -> RXonTXon
             ListenToRequestMessages();
-            // If was the first link and client connected to me - stop threat taking user Input
             if (rx == Mode.On)
             {
                 if (InputThread != null)
@@ -214,21 +222,24 @@ namespace CommunicationLab2
             }
         }
 
-        //no-send/yes-receive
+
+        /// <summary>
+        /// Function for RXonTXoff state
+        /// </summary>
         public void RunRXonTXoff()
         {
-            //IDO: stop sending req msg/looking for servers
-            //IDO: msg rcvd from client -> print msg to terminal
             string message;
             message = GetMessageFromClient();
             if (message != "")
                 Console.WriteLine("Message received: " + message);
         }
 
-        //yes-send/yes-receive
+
+        /// <summary>
+        /// Function for RXonTXon state
+        /// </summary>
         public void RunRXonTXon()
         {
-            //IDO: msg rcvd from client -> replace one char -> send new msg to server
             if (!_myTcpClient.IsConnected() || !_myTcpServer.IsConnected())
             {
                 runProg = false;
@@ -243,6 +254,10 @@ namespace CommunicationLab2
             }
         }
 
+        /// <summary>
+        /// get a user message from TCP server
+        /// </summary>
+        /// <returns></returns>
         public string GetMessageFromClient()
         {
             string message;
@@ -254,6 +269,10 @@ namespace CommunicationLab2
             return message;
         }
 
+        /// <summary>
+        /// send a user message to TCP server
+        /// </summary>
+        /// <param name="message"></param>
         public void SendMessageToServer(string message)
         {
             if (!_myTcpClient.EnqueueMessageToSned(message))
@@ -263,10 +282,11 @@ namespace CommunicationLab2
         }
 
 
-
+        /// <summary>
+        /// read user input and send to TCP server
+        /// </summary>
         private void ReadMessageFromConsoleAndSendToServer()
         {
-            //IDO: get console.readline and send the given msg in a loop
             while (runProg)
             {
                 Console.WriteLine("Enter message:");
@@ -275,10 +295,13 @@ namespace CommunicationLab2
             }
         }
 
-
+        /// <summary>
+        /// Alter a single character in a given string
+        /// </summary>
+        /// <param name="message">original string</param>
+        /// <returns>altared string</returns>
         private string AlterMessage(string message)
         {
-            //IDO: randomluy change one char in msg and return
             StringBuilder sb = new StringBuilder(message);
             Random r = new Random();
             int index = r.Next(0, message.Length-1);
@@ -286,6 +309,10 @@ namespace CommunicationLab2
             return sb.ToString();
         }
 
+        /// <summary>
+        /// get a random character
+        /// </summary>
+        /// <returns>random character</returns>
         public static char GetLetter()
         {
             string chars = "$%#@!*abcdefghijklmnopqrstuvwxyz1234567890?;:ABCDEFGHIJKLMNOPQRSTUVWXYZ^&";
@@ -298,6 +325,10 @@ namespace CommunicationLab2
 
         #region Set First Connection
 
+        /// <summary>
+        /// find first available port within a set range
+        /// </summary>
+        /// <returns>available port</returns>
         private short FindFirstAvailableListeningPort()
         {
             IPGlobalProperties ipGlobalProperties = IPGlobalProperties.GetIPGlobalProperties();
@@ -314,6 +345,10 @@ namespace CommunicationLab2
 
         }
 
+        /// <summary>
+        /// get local IP address of machine
+        /// </summary>
+        /// <returns>local IP address</returns>
         public static IPAddress GetLocalIPAddress()
         {
             var host = Dns.GetHostEntry(Dns.GetHostName());
@@ -329,9 +364,13 @@ namespace CommunicationLab2
 
 
         #endregion 
+
+        /// <summary>
+        /// generate a random number within a set range
+        /// </summary>
+        /// <returns>random number</returns>
         private int GenerateRandom()
         {
-            //IDO:_randomNumber determined once per run
             Random r = new Random();
             return (int)r.Next(0, Int32.MaxValue);
         }

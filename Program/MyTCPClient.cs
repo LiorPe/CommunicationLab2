@@ -20,13 +20,22 @@ namespace CommunicationLab2
        Thread OutputThread;
         bool IsThread = false;
 
-
+        /// <summary>
+        /// Returns connection status
+        /// </summary>
+        /// <returns>true if connected</returns>
         public bool IsConnected()
        {
             return _tcpClient.Connected;
 
         }
 
+        /// <summary>
+        /// attempts to connect to a given TCP server
+        /// </summary>
+        /// <param name="serverIP">IP of target server</param>
+        /// <param name="serverPort">listening port of target server</param>
+        /// <returns></returns>
         public bool TryConnectToServer(IPAddress serverIP, short serverPort)
         {
             ServerIP = serverIP;
@@ -48,6 +57,9 @@ namespace CommunicationLab2
 
         }
 
+        /// <summary>
+        /// init for the message sending thread
+        /// </summary>
         private void SendLoop()
         {
             OutputThread = new Thread(SendMessagesFromQueueToServer);
@@ -55,6 +67,9 @@ namespace CommunicationLab2
             IsThread = true;
         }
 
+        /// <summary>
+        /// send TCP messages
+        /// </summary>
         private void SendMessagesFromQueueToServer()
         {
             while(_tcpClient.Connected)
@@ -78,6 +93,11 @@ namespace CommunicationLab2
             }
         }
 
+        /// <summary>
+        /// Enqueue messages to be sent
+        /// </summary>
+        /// <param name="message"></param>
+        /// <returns></returns>
         public bool EnqueueMessageToSned (string message)
         {
             mutex.WaitOne();

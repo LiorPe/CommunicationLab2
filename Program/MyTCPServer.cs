@@ -19,6 +19,11 @@ namespace CommunicationLab2
         public Queue<string> MessageQueue { get; set; }
         Mutex mutex = new Mutex();
 
+        /// <summary>
+        /// ctor for the MyTCPServer class
+        /// </summary>
+        /// <param name="ip">our local IP</param>
+        /// <param name="listeningPort">listening port for server</param>
         public MyTCPServer(IPAddress ip ,short listeningPort)
         {
             int intPort = Convert.ToInt32(listeningPort);
@@ -29,11 +34,20 @@ namespace CommunicationLab2
             _tcpListener.Start();
         }
 
+
+        /// <summary>
+        /// Returns connection status
+        /// </summary>
+        /// <returns>true if connected</returns>
         public bool IsConnected()
         {
             return _ConnectedTCPClient.Connected; //_ConnectedTCPClient.Connected;
         }
 
+        /// <summary>
+        /// Listens to connection requests and attempts to accept them
+        /// </summary>
+        /// <returns>true if connection succeeded</returns>
         public bool CheckIfClientConnected()
         {
             Console.WriteLine("Checking if any clients asked to connect.");
@@ -58,6 +72,9 @@ namespace CommunicationLab2
             }
         }
 
+        /// <summary>
+        /// init for the message receive thread
+        /// </summary>
         private void ReceiveLoop()
         {
             InputThread = new Thread(_GetMessageFromClient);
@@ -65,6 +82,9 @@ namespace CommunicationLab2
             IsThread = true;
         }
 
+        /// <summary>
+        /// Listen to TCP messages
+        /// </summary>
         private void _GetMessageFromClient()
         {
             while(_ConnectedTCPClient.Connected)
@@ -92,6 +112,11 @@ namespace CommunicationLab2
             }
         }
 
+        /// <summary>
+        /// Dequeue received messages
+        /// </summary>
+        /// <param name="message">out for message</param>
+        /// <returns>true if message received</returns>
         public bool TryGetMessageFromClient(out string message)
         {
             mutex.WaitOne();
