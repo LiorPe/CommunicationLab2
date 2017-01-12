@@ -21,7 +21,7 @@ namespace CommunicationLab2
         //to remove
         int cMinListeningTCPPort = 6001;
         int cMaxListeningTCPPort = 7000;
-        string _programName = "IsisNetworking17";
+        string _programName = "fuckNetworking17";
         IPAddress localAddr = GetLocalIPAddress();
 
         short _meAsServerListeningPort;
@@ -41,9 +41,12 @@ namespace CommunicationLab2
         string _myClientTCPClientName;
         string _myClientTCPServerName;
 
+        bool statusChanged;
+
         public ChineseWhisperPlayer()
         {
             runProg = true;
+            statusChanged = false;
             _logger = new Logger(_programName);
             GenerateRandom();
             _meAsServerListeningPort = FindFirstAvailableListeningPort();
@@ -75,24 +78,38 @@ namespace CommunicationLab2
                 {
                     RunRXonTXon();
                 }
+                UpdateLog();
             }
-            UpdateLog();
-
+            _logger.PrintLog("The host and/or client has ended the connection. Press Enter to exit the program.");
+            Console.ReadLine();
 
         }
 
         private void UpdateLog()
         {
-            string log = "Program name:" + _programName;
-            if (rx == Mode.On)
+            if(statusChanged)
             {
-                log += " ; " + _myClientTCPClientName + " is connected to our TCP server.";
+                string log = "Program name:" + _programName;
+                if (rx == Mode.Off)
+                {
+                    log += "No clients are connected to our TCP server;";
+                }
+                else if(rx == Mode.On)
+                {
+                    log += " ; " + _myClientTCPClientName + " is connected to our TCP server;";
+                }
+
+                if (tx == Mode.Off)
+                {
+                    log += "Our TCP client is not connected to any servers;";
+                }
+                else if (tx == Mode.On)
+                {
+                    log += " ; " + "Our TCP client is connected to " + _myClientTCPServerName + ";";
+                }
+                _logger.PrintLog(log);
+                statusChanged = false;
             }
-            else if (tx == Mode.On)
-            {
-                log += " ; " + "Our TCP client is connected to " + _myClientTCPServerName;
-            }
-            _logger.PrintLog(log);
         }
 
         //no-send/no-receive
@@ -124,8 +141,8 @@ namespace CommunicationLab2
                     if (_myTcpServer.CheckIfClientConnected())
                     {
                         rx = Mode.On;
+                        statusChanged = true;
                         _myClientTCPClientName = requestMessageFromClient.ClientName;
-                        _logger.PrintLog(String.Format("Server is connected to {0}.", _myClientTCPClientName));
                     }
                 }
 
@@ -150,8 +167,8 @@ namespace CommunicationLab2
                         if (_myTcpClient.TryConnectToServer(oMsg.ServerIPAddress, oMsg.ServerListeningPort))
                         {
                             tx = Mode.On;
+                            statusChanged = true;
                             _myClientTCPServerName = oMsg.ServerName;
-                            _logger.PrintLog(String.Format("Client is connected to {0}.", _myClientTCPServerName));
                         }
                     }
 
@@ -184,7 +201,6 @@ namespace CommunicationLab2
                 if(!_myTcpClient.IsConnected())
                 {
                     runProg = false;
-                    Console.WriteLine("The client has ended the connection. Press Enter to exit the program.");
                 }
                 if (!IsThread)
                 {
@@ -213,15 +229,13 @@ namespace CommunicationLab2
             if (!_myTcpClient.IsConnected() || !_myTcpServer.IsConnected())
             {
                 runProg = false;
-                Console.WriteLine("The host and/or client has ended the connection. Press Enter to exit the program.");
-                Console.ReadLine();
             }
             string message = GetMessageFromClient();
             if (message != "")
             {
                 Console.WriteLine("Message received: " + message);
                 string altered_message = AlterMessage(message);
-                Console.WriteLine("New message: " + altered_message);
+                //////////////////Console.WriteLine("New message: " + altered_message);
                 SendMessageToServer(altered_message);
             }
         }
@@ -233,8 +247,6 @@ namespace CommunicationLab2
             if (!isClientConnected)
             {
                 runProg = false;
-                Console.WriteLine("The host and/or client has ended the connection. Press Enter to exit the program.");
-                Console.ReadLine();
             }
             return message;
         }
@@ -244,8 +256,6 @@ namespace CommunicationLab2
             if (!_myTcpClient.EnqueueMessageToSned(message))
             {
                 runProg = false;
-                Console.WriteLine("The host has ended the connection. Press Enter to exit the program.");
-                Console.ReadLine();
             }
         }
 
